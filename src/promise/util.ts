@@ -1,57 +1,35 @@
 
-export class NameGenerator {
+export class IdGen {
     _cache: any;
     constructor() {
         this._cache = {};
     }
-
-    _generateRandomName() {
-        return Math.random().toString(36).substr(2, 9);
+    _generateKey() {
+        return '__p_' + Math.random().toString(36).substr(2, 9);
     }
-
-    _store(name, id) {
-        if (!this._cache[name]) { this._cache[name] = []; }
-        this._cache[name].push(id);
-    }
-
-    _retrieve(name) {
-        if (this._cache.hasOwnProperty(name)) {
-            return this._cache[name];
+    _retrieve(key: string) {
+        if (this._cache.hasOwnProperty(key)) {
+            return this._cache[key];
         }
     }
-
-    _extractName(value) {
-        let r = /^__p__.([a-z0-9]+).__[0-9]+__$/.exec(value);
-        if (r) {
-            return r[1];
-        }
-    }
-
-    getNewName() {
-        let name = this._generateRandomName();
-        let id = '__p__.' + name + '.__' + 0 + '__';
-        this._store(name, id);
+    getNewId() {
+        const key = this._generateKey();
+        const id = key + '.0';
+        this._cache[key] = [id];
         return id;
     }
-
-    getName(p?: string) {
-        if (typeof p === 'string') {
-            let extractedName = this._extractName(p);
-            if (extractedName) {
-                let stack = this._retrieve(extractedName);
-                if (stack) {
-                    let id = '__p__.' + extractedName + '.__' + stack.length + '__';
-                    this._store(extractedName, id);
-                    return id;
-                }
+    getId(id?: string) {
+        if (typeof id === 'string') {
+            let key = id.split('.')[0];
+            let cached = this._retrieve(key);
+            if (cached) {
+                let newId = key + '.' + cached.length;
+                this._cache[key].push(newId);
+                return newId;
             }
         }
-        return this.getNewName();
-    }
-
-    clear() {
-        this._cache = {};
+        return this.getNewId();
     }
 }
 
-export const nameGenerator = new NameGenerator();
+export const idGen = new IdGen();

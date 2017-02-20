@@ -1,5 +1,5 @@
 /*!
- * SpaLib v0.0.1
+ * SpaLib v0.0.2
  * (c) 2017 romagny13
  * Released under the MIT License.
  */
@@ -1524,56 +1524,39 @@ var GoogleAuth = (function (_super) {
     return GoogleAuth;
 }(OAuth));
 
-var NameGenerator = (function () {
-    function NameGenerator() {
+var IdGen = (function () {
+    function IdGen() {
         this._cache = {};
     }
-    NameGenerator.prototype._generateRandomName = function () {
-        return Math.random().toString(36).substr(2, 9);
+    IdGen.prototype._generateKey = function () {
+        return '__p_' + Math.random().toString(36).substr(2, 9);
     };
-    NameGenerator.prototype._store = function (name, id) {
-        if (!this._cache[name]) {
-            this._cache[name] = [];
-        }
-        this._cache[name].push(id);
-    };
-    NameGenerator.prototype._retrieve = function (name) {
-        if (this._cache.hasOwnProperty(name)) {
-            return this._cache[name];
+    IdGen.prototype._retrieve = function (key) {
+        if (this._cache.hasOwnProperty(key)) {
+            return this._cache[key];
         }
     };
-    NameGenerator.prototype._extractName = function (value) {
-        var r = /^__p__.([a-z0-9]+).__[0-9]+__$/.exec(value);
-        if (r) {
-            return r[1];
-        }
-    };
-    NameGenerator.prototype.getNewName = function () {
-        var name = this._generateRandomName();
-        var id = '__p__.' + name + '.__' + 0 + '__';
-        this._store(name, id);
+    IdGen.prototype.getNewId = function () {
+        var key = this._generateKey();
+        var id = key + '.0';
+        this._cache[key] = [id];
         return id;
     };
-    NameGenerator.prototype.getName = function (p) {
-        if (typeof p === 'string') {
-            var extractedName = this._extractName(p);
-            if (extractedName) {
-                var stack = this._retrieve(extractedName);
-                if (stack) {
-                    var id = '__p__.' + extractedName + '.__' + stack.length + '__';
-                    this._store(extractedName, id);
-                    return id;
-                }
+    IdGen.prototype.getId = function (id) {
+        if (typeof id === 'string') {
+            var key = id.split('.')[0];
+            var cached = this._retrieve(key);
+            if (cached) {
+                var newId = key + '.' + cached.length;
+                this._cache[key].push(newId);
+                return newId;
             }
         }
-        return this.getNewName();
+        return this.getNewId();
     };
-    NameGenerator.prototype.clear = function () {
-        this._cache = {};
-    };
-    return NameGenerator;
+    return IdGen;
 }());
-var nameGenerator = new NameGenerator();
+var idGen = new IdGen();
 
 var PromiseState;
 (function (PromiseState) {
@@ -1653,8 +1636,14 @@ var PromiseBase = (function () {
 
 var TSPromise = (function (_super) {
     __extends(TSPromise, _super);
-    function TSPromise(fn) {
+    function TSPromise(fn, id) {
         var _this = _super.call(this) || this;
+        if (!id) {
+            _this._id = idGen.getNewId();
+        }
+        else {
+            _this._id = idGen.getId(id);
+        }
         try {
             if (isFunction(fn)) {
                 fn(function (result) {
@@ -1672,10 +1661,8 @@ var TSPromise = (function (_super) {
         return _this;
     }
     TSPromise.prototype.then = function (onSuccess, onError) {
-        this._proxy = new TSPromise();
+        this._proxy = new TSPromise(null, this._id);
         this._proxy._parent = this;
-        this._id = nameGenerator.getName(this._parent && this._parent._id);
-        this._proxy._id = nameGenerator.getName(this._id);
         this.onSuccess = onSuccess;
         this.onError = onError;
         if (this._state === PromiseState.waitSuccessCallBack) {
@@ -1722,6 +1709,7 @@ var TSPromiseArray = (function (_super) {
             mode race
             handle success or error on first promise resolved / rejected
         */
+        _this._id = idGen.getNewId();
         _this._isCompleted = false;
         _this._promiseResults = [];
         _this._pendingNotify = [];
@@ -1796,10 +1784,8 @@ var TSPromiseArray = (function (_super) {
         });
     };
     TSPromiseArray.prototype.then = function (onSuccess, onError, onNotify) {
-        this._proxy = new TSPromise();
+        this._proxy = new TSPromise(null, this._id);
         this._proxy._parent = this;
-        this._id = nameGenerator.getName(this._parent && this._parent._id);
-        this._proxy._id = nameGenerator.getName(this._id);
         this.onSuccess = onSuccess;
         this.onError = onError;
         this.onNotify = onNotify;
