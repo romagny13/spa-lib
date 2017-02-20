@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <meta charset="utf-8" />
+    <style>
+        .container {
+            max-width: 660px;
+            margin: 0 auto;
+        }
+        
+        .sumary {
+            display: none;
+            border-left-color: #e67e22 !important;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #eee;
+            border-left-width: 5px;
+            border-radius: 3px;
+        }
+        
+        .form-control {
+            display: block;
+            width: 100%;
+            height: 34px;
+            padding: 6px 12px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #555;
+            background-color: #fff;
+            background-image: none;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+            -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+            -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+            transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        }
+        
+        label {
+            display: inline-block;
+            max-width: 100%;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .btn-default {
+            color: #333;
+            background-color: #fff;
+            border-color: #ccc !important;
+        }
+        
+        .btn-default:hover {
+            color: #333;
+            background-color: #e6e6e6;
+            border-color: #adadad;
+        }
+        
+        .btn.focus,
+        .btn:focus,
+        .btn:hover {
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            margin-bottom: 0;
+            font-size: 14px;
+            font-weight: normal;
+            line-height: 1.42857143;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            -ms-touch-action: manipulation;
+            touch-action: manipulation;
+            cursor: pointer;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            background-image: none;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .help-block {
+            display: block;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            color: #737373;
+        }
+        /* Form validation classes */
+        
+        .has-error .help-block {
+            color: #a94442 !important;
+        }
+        
+        .has-error {
+            color: #a94442 !important;
+        }
+        
+        .has-error input {
+            border-color: #a94442 !important;
+        }
+        
+        .has-success input {
+            border-color: #3c763d !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Form binding and validations</h1>
+        <form id="myform" class="form-horizontal">
+            <div class="form-group">
+                <label class="control-label" for="firstname">Firstname:</label>
+                <span name="firstname" data-binding="firstname"></span>
+                <input class="form-control" type="text" id="firstname" name="firstname" />
+            </div>
+
+            <div class="form-group">
+                <label class="control-label" for="lastname">Lastname:</label>
+                <input class="form-control" type="text" id="lastname" name="lastname" />
+            </div>
+
+            <div class="form-group">
+                <label class="control-label" for="email">Email:</label>
+                <input class="form-control" type="text" id="email" name="email" />
+            </div>
+
+            <div class="form-group">
+                <label class="control-label" for="age">Age:</label>
+                <input class="form-control" type="number" id="age" name="age" />
+            </div>
+
+            <div class="form-group">
+                <label class="control-label" for="list">List (no validation):</label>
+                <select class="form-control" name="list">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <h3>Preference</h3>
+                <input type="radio" name="preference" value="a">A<br>
+                <input type="radio" name="preference" value="b">B<br>
+                <input type="radio" name="preference" value="c">C
+            </div>
+
+            <div class="form-group">
+                <h3>Like (mulitple choice)</h3>
+                <input type="checkbox" name="likes" value="Cakes">Cakes<br>
+                <input type="checkbox" name="likes" value="Milk">Milk<br>
+                <input type="checkbox" name="likes" value="Nutella">Nutella
+            </div>
+            <br/>
+            <div class="checkbox"> <label><input type="checkbox" name="agree">Agree to conditions</label></div>
+            <input class="btn btn-default" type="submit" value="Submit" />
+        </form>
+
+        <div class="sumary"></div>
+
+    </div>
+
+
+    <script src="/dist/build.js"></script>
+</body>
+
+</html>

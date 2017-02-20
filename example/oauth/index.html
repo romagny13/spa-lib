@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title></title>
+    </head>
+
+    <body>
+        <h2>Navigate to service!!</h2>
+        <p>Open the console (F12) for profile details</p>
+        <button id="google">Google</button>
+        <button id="facebook">Facebook</button>
+
+        <h2>Popup</h2>
+        <button id="google-popup">Google</button>
+
+        <script src="../../dist/spa.lib.js"></script>
+        <script>
+
+            var google = new SpaLib.GoogleAuth({
+                clientId:"899992117565-ef56p4rnda9t5qqqjb2d7nu5g2sml686.apps.googleusercontent.com",
+                clientSecret:"TFRqHDxU4qQtG9OepTBchpan",
+                redirectUrl:"http://localhost/spa-lib/example/oauth/"
+            });
+            
+             var googlePopup = new SpaLib.GoogleAuth({
+                clientId:"899992117565-ef56p4rnda9t5qqqjb2d7nu5g2sml686.apps.googleusercontent.com",
+                clientSecret:"TFRqHDxU4qQtG9OepTBchpan",
+                redirectUrl:"http://localhost/spa-lib/example/oauth/authcomplete.html"
+            });
+
+            var facebook = new SpaLib.FacebookAuth({
+                clientId:"293162624411980",
+                clientSecret:"71bd42da0481cb786eeb5ff0563876b8",
+                redirectUrl:"http://localhost/spa-lib/example/oauth/"
+            });
+
+
+            // implicit flow
+            // get token
+            function getUrlParameters(url) {
+                var result = {};             
+                // param1=value1&param2=value2
+                var splits = url.split("&");
+                for (var i = 0; i < splits.length ; i++) {
+                    var keyValue = splits[i].split("=");
+                    result[keyValue[0]] = keyValue[1];
+                }
+                return result;
+            }
+
+            // implicit flow
+            // extract token
+            var hash = window.location.hash.split('#')[1];
+            if(hash){
+                var parameters = getUrlParameters(hash);
+                var access_token = parameters["access_token"];
+                if(access_token){
+
+                    var provider = sessionStorage.getItem("provider");
+                    console.log(provider);
+                    if(provider == "google"){
+                        // google ?
+                        google.getProfile(access_token).then(function(response){
+                            console.log("profile",JSON.parse(response));
+                        },function(xhr){
+                            console.log("error",xhr);
+                        });
+                    }
+
+                    if(provider == "facebook"){
+                        // facebook ?
+                        facebook.getProfile(access_token).then(function(response){
+                            console.log("profile",JSON.parse(response));
+                        },function(xhr){
+                            console.log("error",xhr);
+                        });
+                    }
+                }
+            }
+
+            document.querySelector("#google").addEventListener("click",function(e){
+                e.preventDefault();
+
+                var url = google.getTokenUrl();
+                sessionStorage.setItem("provider","google");
+                window.location = url;
+            });
+
+            document.querySelector("#facebook").addEventListener("click",function(e){
+                e.preventDefault();
+
+                var url = facebook.getTokenUrl();
+                sessionStorage.setItem("provider","facebook");
+                window.location = url;
+            });
+
+            document.querySelector("#google-popup").addEventListener("click",function(e){
+                var url = googlePopup.getTokenUrl();
+                sessionStorage.setItem("provider","google-popup");
+
+                var options = 'width=500,height=500,left=' + (window.outerWidth - 500) / 2 + ',top=' + (window.outerHeight - 500) / 2.5;
+                var popup = window.open(url, '', options); 
+
+                window.addEventListener('message', function (event) {
+                    console.log("post message");
+                    if (event.origin === window.location.origin) {
+                        var token = event.data;
+                        popup.close();
+
+                        googlePopup.getProfile(token).then(function(profile){
+                            console.log("profile",JSON.parse(profile));
+                        },function(xhr){
+                            console.log("error",xhr);
+                        });
+
+                    }
+                });
+
+            });
+
+        </script>
+    </body>
+</html>

@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es5",
+        "noImplicitAny": false,
+        "sourceMap": true,
+        "lib": ["dom", "es6"]
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*"
+    ]
+}

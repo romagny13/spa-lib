@@ -1,0 +1,51 @@
+{
+  "name": "spa-lib",
+  "version": "0.0.1",
+  "description": "Services for Spa applications",
+  "main": "dist/spa.lib.js",
+  "typings": "types/index.d.ts",
+  "files": [
+    "dist/spa.lib.js",
+    "dist/spa.lib.min.js",
+    "dist/spa.lib.min.gz",
+    "src",
+    "types/index.d.ts"
+  ],
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --open --inline --hot",
+    "build:webpack": "cross-env NODE_ENV=production webpack --progress --hide-modules",
+    "build": "node build/build.js",
+    "lint": "tslint -c tslint.json 'src/**/*.ts'",
+    "test": "karma start",
+    "test:browser": "webpack --config webpack.config.test"
+  },
+  "keywords": [
+    "spa",
+    "lib"
+  ],
+  "author": "romagny13 <romagny13@yahoo.fr>",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:romagny13/spa-lib.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chai": "^3.4.34",
+    "@types/mocha": "^2.2.38",
+    "awesome-typescript-loader": "^3.0.0-beta.18",
+    "chai": "^3.5.0",
+    "es6-promise": "^4.0.5",
+    "karma": "^1.3.0",
+    "karma-mocha": "^1.3.0",
+    "karma-phantomjs-launcher": "^1.0.2",
+    "karma-webpack": "^2.0.1",
+    "mocha": "^3.2.0",
+    "rollup": "^0.41.4",
+    "rollup-plugin-typescript": "^0.8.1",
+    "tslint": "^4.3.1",
+    "typescript": "^2.1.5",
+    "uglify-js": "^2.7.5",
+    "webpack": "^1.14.0",
+    "webpack-dev-server": "^1.16.2"
+  }
+}
