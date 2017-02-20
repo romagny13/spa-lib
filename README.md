@@ -1,5 +1,7 @@
 # SpaLib
 
+[![Build Status](https://travis-ci.org/romagny13/spa-lib.svg?branch=master)](https://travis-ci.org/romagny13/spa-lib)
+
 - Storage (local, session, cookies and indexedDB services)
 - Cache
 - Messenger
