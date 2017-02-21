@@ -1,5 +1,5 @@
 /*!
- * SpaLib v0.0.3
+ * SpaLib v0.0.4
  * (c) 2017 romagny13
  * Released under the MIT License.
  */
@@ -1756,7 +1756,7 @@ var TSPromiseArray = (function (_super) {
         var _this = this;
         promise.then(function (result) {
             _this._doNotification(result);
-            if (result) {
+            if (isDefined(result)) {
                 _this._promiseResults.push(result);
             }
             // push result to result array
@@ -1785,7 +1785,7 @@ var TSPromiseArray = (function (_super) {
         promises.forEach(function (promise) {
             promise.then(function (result) {
                 if (_this._state !== PromiseState.completed) {
-                    if (result) {
+                    if (isDefined(result)) {
                         _this._promiseResults.push(result);
                     }
                     _this.resolve(result);
