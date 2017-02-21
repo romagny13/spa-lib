@@ -1,11 +1,10 @@
 import { TSPromise } from './promise';
 
 export enum PromiseState {
-    done,
-    fail,
-    waitResult,
-    waitSuccessCallBack,
-    waitErrorCallBack,
+    waitCompleteCallBack, // 0
+    waitRejectionCallBack, // 1
+    waitResolveOrReject, // 2
+    completed, // 3
     none
 }
 
@@ -14,74 +13,72 @@ export enum PromiseMode {
     race
 }
 
-export abstract class PromiseBase {
-    _state: PromiseState;
-    _proxy: TSPromise;
-    _parent: PromiseBase;
+export function createChildPromise(parent: any, id?: string): TSPromise {
+    let child = new TSPromise(null, id);
+    child._parent = parent;
+    return child;
+}
+
+export abstract class TSPromiseBase {
     _id: string;
+    _state: PromiseState;
+    _onComplete: Function;
+    _onReject: Function;
     _pending: any;
-    _pendingNotify: any[];
-    _isCompleted: boolean;
-    onSuccess: Function;
-    onError: Function;
+    _child: TSPromise;
+    _parent: TSPromiseBase;
+
+    _doComplete(result?: any) {
+        try {
+            this._pending = undefined;
+            this._state = PromiseState.completed;
+            let returnValue = this._onComplete(result); // simple function
+            // chaining
+            this._child.resolve(returnValue);
+        }
+        catch (error) {
+            this._child.reject(error);
+        }
+    }
+
+    _doRejection(reason?: any) {
+        try {
+            this._pending = undefined;
+            this._state = PromiseState.completed;
+            let returnValue = this._onReject(reason);
+            // chaining
+            this._child.resolve(returnValue);
+        }
+        catch (error) {
+            // handle child
+            this._child.reject(error);
+        }
+    }
 
     _setPending(state: PromiseState, pending?: any) {
         this._state = state;
         this._pending = pending;
     }
 
-    _handleSuccess(result?: any) {
-        let subResult;
-        try {
-            this._isCompleted = true;
-            subResult = this.onSuccess(result);
-            this._state = PromiseState.done;
-            // chaining
-            this._proxy.resolve(subResult);
-        } catch (e) {
-            this._handleException(e);
-        }
-    }
-
-    _handleError(reason?: any) {
-        let subResult;
-        try {
-            this._isCompleted = true;
-            subResult = this.onError(reason);
-            this._state = PromiseState.fail;
-            this._proxy.resolve(subResult);
-        } catch (e) {
-            this._handleException(e);
-        }
-    }
-
     resolve(result?: any) {
-        // success callback present ?
-        if (this._state === PromiseState.waitResult) {
-            this._handleSuccess(result);
+        // resolved
+        if (this._onComplete) {
+            this._doComplete(result);
         }
         else {
-            // pending
-            this._setPending(PromiseState.waitSuccessCallBack, result);
+            // pending complete callback
+            this._setPending(PromiseState.waitCompleteCallBack, result);
         }
     }
 
     reject(reason?: any) {
-        if (this._state === PromiseState.waitResult) {
-            // at first error
-            this._handleError(reason);
+        // rejected
+        if (this._onReject) {
+            this._doRejection(reason);
         }
         else {
-            this._setPending(PromiseState.waitErrorCallBack, reason);
-        }
-    }
-
-    _handleException(error?: any) {
-        if (this._isCompleted) {
-            this._proxy.reject(error);
-        }
-        else {
-            this.reject(error);
+            // pending rejection callback
+            this._setPending(PromiseState.waitRejectionCallBack, reason);
         }
     }
 

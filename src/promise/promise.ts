@@ -1,65 +1,64 @@
 import { isFunction } from '../util';
 import { idGen } from './util';
-import { PromiseBase, PromiseState, PromiseMode } from './promise.base';
+import { TSPromiseBase, PromiseState, createChildPromise, PromiseMode } from './promise.base';
 import { TSPromiseArray } from './promise.array';
 
-export class TSPromise extends PromiseBase {
+export class TSPromise extends TSPromiseBase {
     constructor(fn?: Function, id?: string) {
         super();
-        if (!id) {
-            this._id = idGen.getNewId();
-        }
-        else {
-            this._id = idGen.getId(id);
-        }
-        try {
-            if (isFunction(fn)) {
-                fn((result?: any) => {
-                    // resolve
+        if (!id) { this._id = idGen.getNewId(); }
+        else { this._id = idGen.getId(id); }
+        if (isFunction(fn)) {
+            try {
+                fn((result: any) => {
+                    // resolved
                     this.resolve(result);
-                }, (reason?: any) => {
-                    // reject
+                }, (reason: any) => {
+                    // rejected
                     this.reject(reason);
                 });
             }
-        } catch (e) {
-            this._handleException(e);
+            catch (error) {
+                this.reject(error);
+            }
         }
     }
 
-    then(onSuccess: Function, onError?: Function): TSPromise {
-        this._proxy = new TSPromise(null, this._id);
-        this._proxy._parent = this;
+    then(onComplete: Function, onReject?: Function): TSPromise {
+        this._child = createChildPromise(this, this._id);
 
-        this.onSuccess = onSuccess;
-        this.onError = onError;
+        this._onComplete = onComplete;
+        this._onReject = onReject;
 
-        if (this._state === PromiseState.waitSuccessCallBack) {
-            this._handleSuccess(this._pending);
+        if (this._state === PromiseState.waitCompleteCallBack) {
+            this._doComplete(this._pending);
         }
-        else if (this._state === PromiseState.waitErrorCallBack) {
-            if (this.onError) {
-                this._handleError(this._pending);
+        else if (this._state === PromiseState.waitRejectionCallBack) {
+            if (isFunction(this._onReject)) {
+                this._doRejection(this._pending);
             }
         }
         else {
-            // wait for result
-            this._state = PromiseState.waitResult;
+            this._state = PromiseState.waitResolveOrReject;
         }
-
-        return this._proxy;
+        return this._child;
     }
 
-    catch(onError: Function) {
-        return this._parent.then(null, onError);
+    catch(onReject: Function): TSPromise {
+        // parent is root ?
+        if (this._parent._state === PromiseState.completed) {
+            return this.then(this._onComplete, onReject);
+        }
+        else {
+            return this._parent.then(this._onComplete, onReject);
+        }
     }
 
-    static all(promises: any[]) {
+    static all(promises: any[]): TSPromiseArray {
         return new TSPromiseArray(promises, PromiseMode.all);
     }
 
-    static race(promises: any[]) {
+    static race(promises: any[]): TSPromiseArray {
         return new TSPromiseArray(promises, PromiseMode.race);
     }
 }
-

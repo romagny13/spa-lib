@@ -1,8 +1,10 @@
-
 export class IdGen {
     _cache: any;
+    _cacheSize: number;
+    _currentSize: number;
     constructor() {
         this._cache = {};
+        this._cacheSize = 100;
     }
     _generateKey() {
         return '__p_' + Math.random().toString(36).substr(2, 9);
@@ -12,10 +14,17 @@ export class IdGen {
             return this._cache[key];
         }
     }
+    _checkCacheSize() {
+        if (this._currentSize === this._cacheSize) {
+            this.clear();
+        }
+    }
     getNewId() {
+        this._checkCacheSize();
         const key = this._generateKey();
         const id = key + '.0';
         this._cache[key] = [id];
+        this._currentSize++;
         return id;
     }
     getId(id?: string) {
@@ -29,6 +38,10 @@ export class IdGen {
             }
         }
         return this.getNewId();
+    }
+    clear() {
+        this._cache = {};
+        this._currentSize = 0;
     }
 }
 
