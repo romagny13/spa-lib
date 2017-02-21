@@ -1,5 +1,5 @@
 /*!
- * SpaLib v0.0.4
+ * SpaLib v0.0.5
  * (c) 2017 romagny13
  * Released under the MIT License.
  */
@@ -1570,67 +1570,6 @@ var IdGen = (function () {
 }());
 var idGen = new IdGen();
 
-var TSPromise = (function (_super) {
-    __extends(TSPromise, _super);
-    function TSPromise(fn, id) {
-        var _this = _super.call(this) || this;
-        if (!id) {
-            _this._id = idGen.getNewId();
-        }
-        else {
-            _this._id = idGen.getId(id);
-        }
-        if (isFunction(fn)) {
-            try {
-                fn(function (result) {
-                    // resolved
-                    _this.resolve(result);
-                }, function (reason) {
-                    // rejected
-                    _this.reject(reason);
-                });
-            }
-            catch (error) {
-                _this.reject(error);
-            }
-        }
-        return _this;
-    }
-    TSPromise.prototype.then = function (onComplete, onReject) {
-        this._child = createChildPromise(this, this._id);
-        this._onComplete = onComplete;
-        this._onReject = onReject;
-        if (this._state === PromiseState.waitCompleteCallBack) {
-            this._doComplete(this._pending);
-        }
-        else if (this._state === PromiseState.waitRejectionCallBack) {
-            if (isFunction(this._onReject)) {
-                this._doRejection(this._pending);
-            }
-        }
-        else {
-            this._state = PromiseState.waitResolveOrReject;
-        }
-        return this._child;
-    };
-    TSPromise.prototype.catch = function (onReject) {
-        // parent is root ?
-        if (this._parent._state === PromiseState.completed) {
-            return this.then(this._onComplete, onReject);
-        }
-        else {
-            return this._parent.then(this._onComplete, onReject);
-        }
-    };
-    TSPromise.all = function (promises) {
-        return new TSPromiseArray(promises, PromiseMode.all);
-    };
-    TSPromise.race = function (promises) {
-        return new TSPromiseArray(promises, PromiseMode.race);
-    };
-    return TSPromise;
-}(TSPromiseBase));
-
 var PromiseState;
 (function (PromiseState) {
     PromiseState[PromiseState["waitCompleteCallBack"] = 0] = "waitCompleteCallBack";
@@ -1821,6 +1760,67 @@ var TSPromiseArray = (function (_super) {
         return this.then(this._onComplete, onError, this._onNotify);
     };
     return TSPromiseArray;
+}(TSPromiseBase));
+
+var TSPromise = (function (_super) {
+    __extends(TSPromise, _super);
+    function TSPromise(fn, id) {
+        var _this = _super.call(this) || this;
+        if (!id) {
+            _this._id = idGen.getNewId();
+        }
+        else {
+            _this._id = idGen.getId(id);
+        }
+        if (isFunction(fn)) {
+            try {
+                fn(function (result) {
+                    // resolved
+                    _this.resolve(result);
+                }, function (reason) {
+                    // rejected
+                    _this.reject(reason);
+                });
+            }
+            catch (error) {
+                _this.reject(error);
+            }
+        }
+        return _this;
+    }
+    TSPromise.prototype.then = function (onComplete, onReject) {
+        this._child = createChildPromise(this, this._id);
+        this._onComplete = onComplete;
+        this._onReject = onReject;
+        if (this._state === PromiseState.waitCompleteCallBack) {
+            this._doComplete(this._pending);
+        }
+        else if (this._state === PromiseState.waitRejectionCallBack) {
+            if (isFunction(this._onReject)) {
+                this._doRejection(this._pending);
+            }
+        }
+        else {
+            this._state = PromiseState.waitResolveOrReject;
+        }
+        return this._child;
+    };
+    TSPromise.prototype.catch = function (onReject) {
+        // parent is root ?
+        if (this._parent._state === PromiseState.completed) {
+            return this.then(this._onComplete, onReject);
+        }
+        else {
+            return this._parent.then(this._onComplete, onReject);
+        }
+    };
+    TSPromise.all = function (promises) {
+        return new TSPromiseArray(promises, PromiseMode.all);
+    };
+    TSPromise.race = function (promises) {
+        return new TSPromiseArray(promises, PromiseMode.race);
+    };
+    return TSPromise;
 }(TSPromiseBase));
 
 exports.Cache = Cache;
