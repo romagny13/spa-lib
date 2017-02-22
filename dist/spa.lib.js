@@ -1,5 +1,5 @@
 /*!
- * SpaLib v0.0.5
+ * SpaLib v0.0.6
  * (c) 2017 romagny13
  * Released under the MIT License.
  */
@@ -1524,304 +1524,210 @@ var GoogleAuth = (function (_super) {
     return GoogleAuth;
 }(OAuth));
 
-var IdGen = (function () {
-    function IdGen() {
-        this._cache = {};
-        this._cacheSize = 100;
+var PromiseResultState;
+(function (PromiseResultState) {
+    PromiseResultState[PromiseResultState["completed"] = 0] = "completed";
+    PromiseResultState[PromiseResultState["waitOnResolvedCallback"] = 1] = "waitOnResolvedCallback";
+    PromiseResultState[PromiseResultState["waitOnRejectedCallback"] = 2] = "waitOnRejectedCallback";
+})(PromiseResultState || (PromiseResultState = {}));
+var SpecializedStackItemType;
+(function (SpecializedStackItemType) {
+    SpecializedStackItemType[SpecializedStackItemType["onResolved"] = 0] = "onResolved";
+    SpecializedStackItemType[SpecializedStackItemType["onRejected"] = 1] = "onRejected";
+})(SpecializedStackItemType || (SpecializedStackItemType = {}));
+var SpecializedStackItem = (function () {
+    function SpecializedStackItem(type, fn) {
+        this.type = type;
+        this.fn = fn;
     }
-    IdGen.prototype._generateKey = function () {
-        return '__p_' + Math.random().toString(36).substr(2, 9);
-    };
-    IdGen.prototype._retrieve = function (key) {
-        if (this._cache.hasOwnProperty(key)) {
-            return this._cache[key];
+    return SpecializedStackItem;
+}());
+var SpecializedStack = (function () {
+    function SpecializedStack() {
+        this._stack = [];
+    }
+    SpecializedStack.prototype._getNextItemIndex = function (type) {
+        var length = this._stack.length;
+        for (var i = 0; i < length; i++) {
+            var item = this._stack[i];
+            if (item.type === type) {
+                return i;
+            }
         }
+        return -1;
     };
-    IdGen.prototype._checkCacheSize = function () {
-        if (this._currentSize === this._cacheSize) {
+    SpecializedStack.prototype._splice = function (index) {
+        this._stack.splice(0, index);
+    };
+    SpecializedStack.prototype.clear = function () {
+        this._stack = [];
+    };
+    SpecializedStack.prototype.push = function (type, fn) {
+        this._stack.push(new SpecializedStackItem(type, fn));
+    };
+    SpecializedStack.prototype.next = function (type) {
+        var index = this._getNextItemIndex(type);
+        if (index !== -1) {
+            this._splice(index);
+        }
+        else {
             this.clear();
         }
+        return this._stack.shift();
     };
-    IdGen.prototype.getNewId = function () {
-        this._checkCacheSize();
-        var key = this._generateKey();
-        var id = key + '.0';
-        this._cache[key] = [id];
-        this._currentSize++;
-        return id;
-    };
-    IdGen.prototype.getId = function (id) {
-        if (typeof id === 'string') {
-            var key = id.split('.')[0];
-            var cached = this._retrieve(key);
-            if (cached) {
-                var newId = key + '.' + cached.length;
-                this._cache[key].push(newId);
-                return newId;
-            }
-        }
-        return this.getNewId();
-    };
-    IdGen.prototype.clear = function () {
-        this._cache = {};
-        this._currentSize = 0;
-    };
-    return IdGen;
+    return SpecializedStack;
 }());
-var idGen = new IdGen();
-
-var PromiseState;
-(function (PromiseState) {
-    PromiseState[PromiseState["waitCompleteCallBack"] = 0] = "waitCompleteCallBack";
-    PromiseState[PromiseState["waitRejectionCallBack"] = 1] = "waitRejectionCallBack";
-    PromiseState[PromiseState["waitResolveOrReject"] = 2] = "waitResolveOrReject";
-    PromiseState[PromiseState["completed"] = 3] = "completed";
-    PromiseState[PromiseState["none"] = 4] = "none";
-})(PromiseState || (PromiseState = {}));
-var PromiseMode;
-(function (PromiseMode) {
-    PromiseMode[PromiseMode["all"] = 0] = "all";
-    PromiseMode[PromiseMode["race"] = 1] = "race";
-})(PromiseMode || (PromiseMode = {}));
-function createChildPromise(parent, id) {
-    var child = new TSPromise(null, id);
-    child._parent = parent;
-    return child;
-}
-var TSPromiseBase = (function () {
-    function TSPromiseBase() {
-    }
-    TSPromiseBase.prototype._doComplete = function (result) {
+var TSPromise = (function () {
+    function TSPromise(executor) {
+        var _this = this;
+        this._root = this;
+        this._stack = new SpecializedStack();
         try {
-            this._pending = undefined;
-            this._state = PromiseState.completed;
-            var returnValue = this._onComplete(result); // simple function
-            // chaining
-            this._child.resolve(returnValue);
-        }
-        catch (error) {
-            this._child.reject(error);
-        }
-    };
-    TSPromiseBase.prototype._doRejection = function (reason) {
-        try {
-            this._pending = undefined;
-            this._state = PromiseState.completed;
-            var returnValue = this._onReject(reason);
-            // chaining
-            this._child.resolve(returnValue);
-        }
-        catch (error) {
-            // handle child
-            this._child.reject(error);
-        }
-    };
-    TSPromiseBase.prototype._setPending = function (state, pending) {
-        this._state = state;
-        this._pending = pending;
-    };
-    TSPromiseBase.prototype.resolve = function (result) {
-        // resolved
-        if (this._onComplete) {
-            this._doComplete(result);
-        }
-        else {
-            // pending complete callback
-            this._setPending(PromiseState.waitCompleteCallBack, result);
-        }
-    };
-    TSPromiseBase.prototype.reject = function (reason) {
-        // rejected
-        if (this._onReject) {
-            this._doRejection(reason);
-        }
-        else {
-            // pending rejection callback
-            this._setPending(PromiseState.waitRejectionCallBack, reason);
-        }
-    };
-    return TSPromiseBase;
-}());
-
-var TSPromiseArray = (function (_super) {
-    __extends(TSPromiseArray, _super);
-    function TSPromiseArray(promises, mode) {
-        var _this = _super.call(this) || this;
-        /*
-            mode all
-            promise with array of promises
-            handle success if all promises are resolved
-            - and if success callback present
-            - else set state to wait success callback and pending
-            handle error if one promise of array is rejected
-            - and if error callback present
-            - else set state to wait error callback and pending
-            handle notify if notify callback present if set pending notify
-
-            mode race
-            handle success or error on first promise resolved / rejected
-        */
-        _this._id = idGen.getNewId();
-        _this._promiseResults = [];
-        _this._pendingNotify = [];
-        _this._mode = mode;
-        _this._promises = promises;
-        if (_this._mode === PromiseMode.all) {
-            _this._iteratePromises(promises);
-        }
-        else if (_this._mode === PromiseMode.race) {
-            _this._race(promises);
-        }
-        return _this;
-    }
-    TSPromiseArray.prototype._notifyPendings = function () {
-        var _this = this;
-        if (this._pendingNotify.length > 0) {
-            this._pendingNotify.forEach(function (pendingResult) {
-                _this._onNotify(pendingResult);
-            });
-            this._pendingNotify = [];
-        }
-    };
-    TSPromiseArray.prototype._doNotification = function (result) {
-        if (this._onNotify) {
-            this._onNotify(result);
-        }
-        else {
-            this._pendingNotify.push(result);
-        }
-    };
-    TSPromiseArray.prototype._nextPromise = function (promise, promises, index, length) {
-        var _this = this;
-        promise.then(function (result) {
-            _this._doNotification(result);
-            if (isDefined(result)) {
-                _this._promiseResults.push(result);
-            }
-            // push result to result array
-            index++;
-            if (index < length) {
-                _this._nextPromise(promises[index], promises, index, length);
-            }
-            else {
-                _this.resolve(_this._promiseResults);
-            }
-        }, function (reason) {
-            _this.reject(reason);
-        });
-    };
-    TSPromiseArray.prototype._iteratePromises = function (promises) {
-        var length = promises.length, index = 0;
-        if (length > 0) {
-            this._nextPromise(promises[0], promises, index, length);
-        }
-        else {
-            this.resolve([]);
-        }
-    };
-    TSPromiseArray.prototype._race = function (promises) {
-        var _this = this;
-        promises.forEach(function (promise) {
-            promise.then(function (result) {
-                if (_this._state !== PromiseState.completed) {
-                    if (isDefined(result)) {
-                        _this._promiseResults.push(result);
-                    }
-                    _this.resolve(result);
-                }
-            }, function (reason) {
-                _this.reject(reason);
-            });
-        });
-    };
-    TSPromiseArray.prototype.then = function (onComplete, onReject, onNotify) {
-        this._child = createChildPromise(this, this._id);
-        this._onComplete = onComplete;
-        this._onReject = onReject;
-        this._onNotify = onNotify;
-        // pending notify ?
-        if (isFunction(this._onNotify)) {
-            this._notifyPendings();
-        }
-        if (this._state === PromiseState.waitCompleteCallBack) {
-            this._doComplete(this._promiseResults);
-        }
-        else if (this._state === PromiseState.waitRejectionCallBack) {
-            if (isFunction(this._onReject)) {
-                this._doRejection(this._pending);
-            }
-        }
-        else {
-            this._state = PromiseState.waitResolveOrReject;
-        }
-        return this._child;
-    };
-    TSPromiseArray.prototype.catch = function (onError) {
-        return this.then(this._onComplete, onError, this._onNotify);
-    };
-    return TSPromiseArray;
-}(TSPromiseBase));
-
-var TSPromise = (function (_super) {
-    __extends(TSPromise, _super);
-    function TSPromise(fn, id) {
-        var _this = _super.call(this) || this;
-        if (!id) {
-            _this._id = idGen.getNewId();
-        }
-        else {
-            _this._id = idGen.getId(id);
-        }
-        if (isFunction(fn)) {
-            try {
-                fn(function (result) {
-                    // resolved
+            if (isFunction(executor)) {
+                executor(function (result) {
                     _this.resolve(result);
                 }, function (reason) {
-                    // rejected
                     _this.reject(reason);
                 });
             }
-            catch (error) {
-                _this.reject(error);
-            }
         }
-        return _this;
+        catch (error) {
+            this.reject(error);
+        }
     }
-    TSPromise.prototype.then = function (onComplete, onReject) {
-        this._child = createChildPromise(this, this._id);
-        this._onComplete = onComplete;
-        this._onReject = onReject;
-        if (this._state === PromiseState.waitCompleteCallBack) {
-            this._doComplete(this._pending);
-        }
-        else if (this._state === PromiseState.waitRejectionCallBack) {
-            if (isFunction(this._onReject)) {
-                this._doRejection(this._pending);
-            }
+    TSPromise.prototype.resolve = function (result) {
+        this._root._result = result;
+        var item = this._root._stack.next(SpecializedStackItemType.onResolved);
+        if (item) {
+            item.fn();
         }
         else {
-            this._state = PromiseState.waitResolveOrReject;
+            this._root._state = PromiseResultState.waitOnResolvedCallback;
+        }
+    };
+    TSPromise.prototype.reject = function (reason) {
+        this._root._reason = reason;
+        var item = this._root._stack.next(SpecializedStackItemType.onRejected);
+        if (item) {
+            item.fn();
+        }
+        else {
+            this._root._state = PromiseResultState.waitOnRejectedCallback;
+        }
+    };
+    TSPromise.prototype.then = function (onComplete, onRejection) {
+        this._child = new TSChildPromise(this._root);
+        var self = this;
+        function _doCompletion() {
+            try {
+                var returnValue = onComplete(self._root._result);
+                self._child.resolve(returnValue);
+            }
+            catch (error) {
+                self._child.reject(error);
+            }
+        }
+        function _doRejection() {
+            try {
+                var returnValue = onRejection(self._root._reason);
+                self._child.resolve(returnValue);
+            }
+            catch (error) {
+                self._child.reject(error);
+            }
+        }
+        if (isFunction(onComplete)) {
+            this._root._stack.push(SpecializedStackItemType.onResolved, function () {
+                _doCompletion();
+            });
+        }
+        if (isFunction(onRejection)) {
+            this._root._stack.push(SpecializedStackItemType.onRejected, function () {
+                _doRejection();
+            });
+        }
+        if (isFunction(onComplete) && this._root._state === PromiseResultState.waitOnResolvedCallback) {
+            var item = this._root._stack.next(SpecializedStackItemType.onResolved);
+            if (item) {
+                item.fn();
+            }
+        }
+        else if (onRejection && this._root._state === PromiseResultState.waitOnRejectedCallback) {
+            var item = this._root._stack.next(SpecializedStackItemType.onRejected);
+            if (item) {
+                item.fn();
+            }
         }
         return this._child;
     };
-    TSPromise.prototype.catch = function (onReject) {
-        // parent is root ?
-        if (this._parent._state === PromiseState.completed) {
-            return this.then(this._onComplete, onReject);
-        }
-        else {
-            return this._parent.then(this._onComplete, onReject);
-        }
+    TSPromise.prototype.catch = function (onRejection) {
+        return this.then(null, onRejection);
     };
     TSPromise.all = function (promises) {
-        return new TSPromiseArray(promises, PromiseMode.all);
+        var results = [], isCompleted = false, length = promises.length, index = 0;
+        var promiseAll = new TSPromise();
+        for (var i = 0; i < length; i++) {
+            var promise = promises[i];
+            try {
+                promise.then(function (result) {
+                    if (!isCompleted) {
+                        results.push(result);
+                        index++;
+                        if (index === length) {
+                            isCompleted = true;
+                            promiseAll.resolve(results);
+                        }
+                    }
+                }, function (reason) {
+                    if (!isCompleted) {
+                        isCompleted = true;
+                        promiseAll.reject(reason);
+                    }
+                });
+            }
+            catch (error) {
+                isCompleted = true;
+                promiseAll.reject(error);
+            }
+        }
+        return promiseAll;
     };
     TSPromise.race = function (promises) {
-        return new TSPromiseArray(promises, PromiseMode.race);
+        var isCompleted = false, length = promises.length, index = 0;
+        var promiseAll = new TSPromise();
+        for (var i = 0; i < length; i++) {
+            var promise = promises[i];
+            try {
+                promise.then(function (result) {
+                    if (!isCompleted) {
+                        isCompleted = true;
+                        promiseAll.resolve(result);
+                    }
+                }, function (reason) {
+                    if (!isCompleted) {
+                        isCompleted = true;
+                        promiseAll.reject(reason);
+                    }
+                });
+            }
+            catch (error) {
+                isCompleted = true;
+                promiseAll.reject(error);
+            }
+        }
+        return promiseAll;
     };
     return TSPromise;
-}(TSPromiseBase));
+}());
+var TSChildPromise = (function (_super) {
+    __extends(TSChildPromise, _super);
+    function TSChildPromise(root) {
+        var _this = _super.call(this) || this;
+        _this._root = root;
+        return _this;
+    }
+    return TSChildPromise;
+}(TSPromise));
 
 exports.Cache = Cache;
 exports.FormBinding = FormBinding;
