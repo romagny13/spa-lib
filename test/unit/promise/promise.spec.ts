@@ -1,8 +1,7 @@
 import { assert } from 'chai';
 import { TSPromise } from '../../../src/promise/promise';
 
-
-describe('TSPromise and TSPromise all', () => {
+describe('TSPromise', () => {
 
     describe('TSPromise', () => {
 
@@ -407,7 +406,7 @@ describe('TSPromise and TSPromise all', () => {
 
     });
 
-    describe('All', () => {
+    describe('all', () => {
 
         it('Should resolve (resolve => then)', (done) => {
             let r = 'p1 resolved',
@@ -472,10 +471,10 @@ describe('TSPromise and TSPromise all', () => {
 
             setTimeout(() => {
                 TSPromise.all([p1, p2]).then((result) => {
-                  //  console.log('fail')
+                    // console.log('fail')
                     assert.fail();
                 }, (reason) => {
-                //    console.log('error', reason)
+                    //   console.log('error', reason)
                     assert.equal(reason, r);
                     done();
                 });
@@ -757,169 +756,168 @@ describe('TSPromise and TSPromise all', () => {
                 });
             }, 500);
         });
+    });
 
-        describe('Race', () => {
+    describe('race', () => {
 
-            it('Should Resolve first promise resolved', (done) => {
-                let r = 'r3 resolved';
-                // 3 promises, the most fastest (p3) should be the first// then all have to be completed and not executed
+        it('Should Resolve first promise resolved', (done) => {
+            let r = 'r3 resolved';
+            // 3 promises, the most fastest (p3) should be the first// then all have to be completed and not executed
 
-                let p1 = new TSPromise((resolve, reject) => {
-                    setTimeout(function () {
-                        resolve('r1 resolved');
-                    }, 1000);
-                });
-
-                let p2 = new TSPromise((resolve, reject) => {
-                    setTimeout(function () {
-                        resolve('r2 resolved');
-                    }, 1200);
-                });
-
-                let p3 = new TSPromise((resolve, reject) => {
-                    setTimeout(function () {
-                        resolve(r);
-                    }, 400);
-                });
-
-                setTimeout(() => {
-                    TSPromise.race([p1, p2, p3]).then((result) => {
-                        assert.equal(result, r);
-                        done();
-                    }, () => {
-                        assert.fail();
-                    });
-                }, 500);
-
-            });
-
-            it('Should Return result from then', (done) => {
-                let r = 'return result';
-                let p1 = new TSPromise((resolve, reject) => {
+            let p1 = new TSPromise((resolve, reject) => {
+                setTimeout(function () {
                     resolve('r1 resolved');
-                });
-
-                let p2 = new TSPromise((resolve, reject) => {
-                    resolve('r2 resolved');
-                });
-
-                setTimeout(() => {
-                    TSPromise.race([p1, p2]).then((result) => {
-                        return r;
-                    }, (reason) => {
-                        assert.equal(reason, r);
-                        done();
-                    }).then((result) => {
-                        assert.equal(result, r);
-                        done();
-                    });
-                }, 500);
-
+                }, 1000);
             });
 
-            it('Should Resolve handle exception', (done) => {
-                let r = 'error';
-                let p1 = new TSPromise((resolve, reject) => {
-                    resolve('r1 resolved');
-                });
-
-                let p2 = new TSPromise((resolve, reject) => {
+            let p2 = new TSPromise((resolve, reject) => {
+                setTimeout(function () {
                     resolve('r2 resolved');
-                });
-
-                setTimeout(() => {
-                    TSPromise.race([p1, p2]).then((result) => {
-                        throw r;
-                    }, (reason) => {
-                        assert.equal(reason, r);
-                        done();
-                    });
-                }, 500);
-
+                }, 1200);
             });
 
-            it('Should Return result from then and handle next exception', (done) => {
-                let r = 'return result';
-                let p1 = new TSPromise((resolve, reject) => {
-                    resolve('r1 resolved');
-                });
-
-                let p2 = new TSPromise((resolve, reject) => {
-                    resolve('r2 resolved');
-                });
-
-                setTimeout(() => {
-                    TSPromise.race([p1, p2]).then((result) => {
-                        return r;
-                    }, (reason) => {
-                        assert.equal(reason, r);
-                        done();
-                    }).then((result) => {
-                        throw r;
-                    }).catch((reason) => {
-                        assert.equal(reason, r);
-                        done();
-                    });
-                }, 500);
-
+            let p3 = new TSPromise((resolve, reject) => {
+                setTimeout(function () {
+                    resolve(r);
+                }, 400);
             });
 
-            it('Should Return result from then and handle next exception and ignore then', (done) => {
-                let r = 'return result';
-                let p1 = new TSPromise((resolve, reject) => {
-                    resolve('r1 resolved');
+            setTimeout(() => {
+                TSPromise.race([p1, p2, p3]).then((result) => {
+                    assert.equal(result, r);
+                    done();
+                }, () => {
+                    assert.fail();
                 });
+            }, 500);
 
-                let p2 = new TSPromise((resolve, reject) => {
-                    resolve('r2 resolved');
-                });
-
-                setTimeout(() => {
-                    TSPromise.race([p1, p2]).then((result) => {
-                        return r;
-                    }, (reason) => {
-                        assert.equal(reason, r);
-                        done();
-                    }).then((result) => {
-                        throw r;
-                    })
-                        .then(() => { assert.fail(); })
-                        .then(() => { assert.fail(); })
-                        .then(() => { assert.fail(); })
-                        .then(() => { assert.fail(); })
-                        .catch((reason) => {
-                            assert.equal(reason, r);
-                            done();
-                        });
-                }, 500);
-
-            });
         });
 
-        describe('Manual', () => {
+        it('Should Return result from then', (done) => {
+            let r = 'return result';
+            let p1 = new TSPromise((resolve, reject) => {
+                resolve('r1 resolved');
+            });
 
-            it('Should Reject', (done) => {
+            let p2 = new TSPromise((resolve, reject) => {
+                resolve('r2 resolved');
+            });
 
-                let r = 'p1 rejected';
+            setTimeout(() => {
+                TSPromise.race([p1, p2]).then((result) => {
+                    return r;
+                }, (reason) => {
+                    assert.equal(reason, r);
+                    done();
+                }).then((result) => {
+                    assert.equal(result, r);
+                    done();
+                });
+            }, 500);
 
-                function f1(condition) {
-                    let promise = new TSPromise();
-                    if (condition) { promise.resolve('p1 resolved'); }
-                    else { promise.reject(r); }
-                    return promise;
-                }
+        });
 
-                let p1 = f1(false);
-                p1.then((result) => {
-                    assert.fail();
+        it('Should Resolve handle exception', (done) => {
+            let r = 'error';
+            let p1 = new TSPromise((resolve, reject) => {
+                resolve('r1 resolved');
+            });
+
+            let p2 = new TSPromise((resolve, reject) => {
+                resolve('r2 resolved');
+            });
+
+            setTimeout(() => {
+                TSPromise.race([p1, p2]).then((result) => {
+                    throw r;
                 }, (reason) => {
                     assert.equal(reason, r);
                     done();
                 });
+            }, 500);
 
-            });
         });
 
+        it('Should Return result from then and handle next exception', (done) => {
+            let r = 'return result';
+            let p1 = new TSPromise((resolve, reject) => {
+                resolve('r1 resolved');
+            });
+
+            let p2 = new TSPromise((resolve, reject) => {
+                resolve('r2 resolved');
+            });
+
+            setTimeout(() => {
+                TSPromise.race([p1, p2]).then((result) => {
+                    return r;
+                }, (reason) => {
+                    assert.equal(reason, r);
+                    done();
+                }).then((result) => {
+                    throw r;
+                }).catch((reason) => {
+                    assert.equal(reason, r);
+                    done();
+                });
+            }, 500);
+
+        });
+
+        it('Should Return result from then and handle next exception and ignore then', (done) => {
+            let r = 'return result';
+            let p1 = new TSPromise((resolve, reject) => {
+                resolve('r1 resolved');
+            });
+
+            let p2 = new TSPromise((resolve, reject) => {
+                resolve('r2 resolved');
+            });
+
+            setTimeout(() => {
+                TSPromise.race([p1, p2]).then((result) => {
+                    return r;
+                }, (reason) => {
+                    assert.equal(reason, r);
+                    done();
+                }).then((result) => {
+                    throw r;
+                })
+                    .then(() => { assert.fail(); })
+                    .then(() => { assert.fail(); })
+                    .then(() => { assert.fail(); })
+                    .then(() => { assert.fail(); })
+                    .catch((reason) => {
+                        assert.equal(reason, r);
+                        done();
+                    });
+            }, 500);
+
+        });
+    });
+
+    describe('Manual', () => {
+
+        it('Should Reject', (done) => {
+
+            let r = 'p1 rejected';
+
+            function f1(condition) {
+                let promise = new TSPromise();
+                if (condition) { promise.resolve('p1 resolved'); }
+                else { promise.reject(r); }
+                return promise;
+            }
+
+            let p1 = f1(false);
+            p1.then((result) => {
+                assert.fail();
+            }, (reason) => {
+                assert.equal(reason, r);
+                done();
+            });
+
+        });
     });
 });
 
