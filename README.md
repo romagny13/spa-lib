@@ -76,58 +76,6 @@ Support :
 
 ## Form binding and validation
 
-Allow to bind and validate with a simple form (cons: actually interact with the DOM)
-```html
-<form id="myform" class="form-horizontal">
-    <div class="form-group">
-        <label class="control-label" for="firstname">Firstname:</label>
-        <span name="firstname" data-binding="firstname"></span>
-        <input class="form-control" type="text" id="firstname" name="firstname" />
-    </div>
-
-    <div class="form-group">
-        <label class="control-label" for="lastname">Lastname:</label>
-        <input class="form-control" type="text" id="lastname" name="lastname" />
-    </div>
-
-    <div class="form-group">
-        <label class="control-label" for="email">Email:</label>
-        <input class="form-control" type="text" id="email" name="email" />
-    </div>
-
-    <div class="form-group">
-        <label class="control-label" for="age">Age:</label>
-        <input class="form-control" type="number" id="age" name="age" />
-    </div>
-
-    <div class="form-group">
-        <label class="control-label" for="list">List (no validation):</label>
-        <select class="form-control" name="list">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                </select>
-    </div>
-
-    <div class="form-group">
-        <h3>Preference</h3>
-        <input type="radio" name="preference" value="a">A<br>
-        <input type="radio" name="preference" value="b">B<br>
-        <input type="radio" name="preference" value="c">C
-    </div>
-
-    <div class="form-group">
-        <h3>Like (multiple choice)</h3>
-        <input type="checkbox" name="likes" value="Cakes">Cakes<br>
-        <input type="checkbox" name="likes" value="Milk">Milk<br>
-        <input type="checkbox" name="likes" value="Nutella">Nutella
-    </div>
-    <br/>
-    <div class="checkbox"> <label><input type="checkbox" name="agree">Agree to conditions</label></div>
-    <input class="btn btn-default" type="submit" value="Submit" />
-</form>
-```
-
 ```js
 // model
 let user = {
@@ -186,6 +134,59 @@ formBinding.onSubmit((response: FormSubmittedResponse) => {
         `;
     }
 });
+```
+
+Allow to bind and validate with a simple form (cons: actually interact with the DOM)
+
+```html
+<form id="myform" class="form-horizontal">
+    <div class="form-group">
+        <label class="control-label" for="firstname">Firstname:</label>
+        <span name="firstname" data-binding="firstname"></span>
+        <input class="form-control" type="text" id="firstname" name="firstname" />
+    </div>
+
+    <div class="form-group">
+        <label class="control-label" for="lastname">Lastname:</label>
+        <input class="form-control" type="text" id="lastname" name="lastname" />
+    </div>
+
+    <div class="form-group">
+        <label class="control-label" for="email">Email:</label>
+        <input class="form-control" type="text" id="email" name="email" />
+    </div>
+
+    <div class="form-group">
+        <label class="control-label" for="age">Age:</label>
+        <input class="form-control" type="number" id="age" name="age" />
+    </div>
+
+    <div class="form-group">
+        <label class="control-label" for="list">List (no validation):</label>
+        <select class="form-control" name="list">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+    </div>
+
+    <div class="form-group">
+        <h3>Preference</h3>
+        <input type="radio" name="preference" value="a">A<br>
+        <input type="radio" name="preference" value="b">B<br>
+        <input type="radio" name="preference" value="c">C
+    </div>
+
+    <div class="form-group">
+        <h3>Like (multiple choice)</h3>
+        <input type="checkbox" name="likes" value="Cakes">Cakes<br>
+        <input type="checkbox" name="likes" value="Milk">Milk<br>
+        <input type="checkbox" name="likes" value="Nutella">Nutella
+    </div>
+    <br/>
+    <div class="checkbox"> <label><input type="checkbox" name="agree">Agree to conditions</label></div>
+    <input class="btn btn-default" type="submit" value="Submit" />
+</form>
 ```
 
 ## Messenger
