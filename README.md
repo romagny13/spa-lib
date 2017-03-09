@@ -97,7 +97,7 @@ const formConfig = new FormConfig()
     .addFormElementConfig('age', [Validator.custom((value) => {
         return value > 0 && value < 120;
     }, 'Oops ??')])
-    .addFormElementConfig('agree', [Validator.required()]) // validation with a element not in the model (checkbox for example)
+    .addFormElementConfig('agree', [Validator.required()]) // validation with an element not in the model (checkbox for example)
     .addFormElementConfig('likes', [Validator.custom(() => {
         return user.likes.length > 0;
     }, 'Please select one or more items.')]);
