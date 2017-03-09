@@ -10,7 +10,7 @@ export class Http {
         this.interceptors = [];
     }
 
-    intercept(type: string, r: HttpRequest | HttpResponse, onComplete: Function, onAbort: Function) {
+    _intercept(type: string, r: HttpRequest | HttpResponse, onComplete: Function, onAbort: Function) {
         let hooks = getHooks(type, this.interceptors),
             length = hooks.length,
             index = 0;
@@ -37,7 +37,7 @@ export class Http {
         const request = new HttpRequest({ url });
         sendRequest(request, (response: HttpResponse) => {
             if (response.status === 200) {
-                onSuccess(response.content);
+                onSuccess(response.body);
             }
             else {
                 if (onError) { onError(response); }
@@ -47,10 +47,10 @@ export class Http {
 
     send(request: HttpRequest) {
         return new Promise((resolve, reject) => {
-            this.intercept('before', request, () => {
+            this._intercept('before', request, () => {
                 try {
                     sendRequest(request, (response: HttpResponse) => {
-                        this.intercept('after', response, () => {
+                        this._intercept('after', response, () => {
                             if (response.isSuccessStatusCode) {
                                 resolve(response);
                             }

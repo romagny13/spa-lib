@@ -50,7 +50,6 @@ export class Messenger {
         return false;
     }
 
-
     clear(): void {
         this._cache = {};
     }

@@ -149,7 +149,7 @@ interface HttpInterceptor {
 interface HttpResponse {
     new (): HttpResponse;
     headers: any;
-    content: any;
+    body: any;
     status: number;
     isSuccessStatusCode: boolean;
 }
@@ -160,14 +160,21 @@ interface HttpRequest {
     url: string;
     responseType: string;
     async: boolean;
-    data: any;
+    body: any;
+    progress: EventListenerOrEventListenerObject;
+    timeout: number;
+    abort: Function;
+    credentials: boolean;
     new (config: {
         url: string;
         headers?: any;
         method?: string;
         responseType?: string;
         async?: boolean;
-        data?: any;
+        body?: any;
+        progress?: EventListenerOrEventListenerObject;
+        timeout?: number;
+        credentials?: boolean;
     }): HttpRequest;
     addHeader(header: string, value: string): HttpRequest;
     setResponseType(responseType: string): HttpRequest;

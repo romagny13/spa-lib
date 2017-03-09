@@ -1,5 +1,5 @@
 /*!
- * SpaLib v0.0.7
+ * SpaLib v0.0.8
  * (c) 2017 romagny13
  * Released under the MIT License.
  */
@@ -441,20 +441,19 @@ var ObservableArray = (function () {
         array.push = function () {
             for (var i = 0; i < arguments.length; i++) {
                 var item = arguments[i];
-                var index = array.length;
-                Array.prototype.push.call(array, item);
+                var index = this.length;
+                Array.prototype.push.call(this, item);
                 raise('added', item, index);
             }
-            return array.length;
+            return this.length;
         };
         // insert to the beginning each argument
         array.unshift = function () {
             for (var i = 0; i < arguments.length; i++) {
                 var item = arguments[i];
-                array.splice(i, 0, item);
-                raise('added', item, i);
+                this.splice(i, 0, item);
             }
-            return array.length;
+            return this.length;
         };
         // from start index, delete x items, then insert next arguments and return an array with all removed items
         array.splice = function (start, deleteCount) {
@@ -463,14 +462,17 @@ var ObservableArray = (function () {
             for (var _i = 2; _i < arguments.length; _i++) {
                 items[_i - 2] = arguments[_i];
             }
+            if (!isNumber(start) || !isNumber(deleteCount)) {
+                return [];
+            }
             var removedItems = [];
-            if (isUndefined(start) || isUndefined(deleteCount))
-                return removedItems;
             // remove
-            while (deleteCount--) {
-                var index = deleteCount + start;
-                var item = Array.prototype.splice.call(this, index, 1)[0];
-                raise('removed', item, index);
+            var endIndex = start + deleteCount;
+            for (var i = start; i < endIndex; i++) {
+                // index always start because we removed an item
+                var item = Array.prototype.splice.call(this, start, 1)[0];
+                removedItems.push(item);
+                raise('removed', item, i);
             }
             // insert
             items.forEach(function (item, i) {
@@ -482,7 +484,7 @@ var ObservableArray = (function () {
         };
         // remove and return the first item (inverse of pop)
         array.shift = function () {
-            if (array.length > -1) {
+            if (this.length > -1) {
                 var item = Array.prototype.shift.call(this);
                 raise('removed', item, 0);
                 return item;
@@ -490,7 +492,7 @@ var ObservableArray = (function () {
         };
         // remove and return the last item
         array.pop = function () {
-            var index = array.length - 1;
+            var index = this.length - 1;
             if (index > -1) {
                 var item = Array.prototype.pop.call(this);
                 raise('removed', item, index);
@@ -499,21 +501,22 @@ var ObservableArray = (function () {
         };
         array.sort = function (fn) {
             Array.prototype.sort.call(this, fn);
-            raise('sorted', array, null);
-            return array;
+            raise('sorted', this, null);
+            return this;
         };
         array.filter = function (fn) {
             var result = [];
-            array.forEach(function (current) {
-                if (fn(current))
+            this.forEach(function (current) {
+                if (fn(current) === true) {
                     result.push(current);
+                }
             });
             raise('filtered', result, null);
             return result;
         };
         array['resetFilter'] = function () {
-            raise('filtered', array, null);
-            return array;
+            raise('filtered', this, null);
+            return this;
         };
     }
     ObservableArray.prototype.subscribe = function (subscriber) {
@@ -1186,42 +1189,26 @@ var CustomValidator = (function (_super) {
     return CustomValidator;
 }(Validator));
 
-var HttpRequest = (function () {
-    function HttpRequest(config) {
-        if (!isString(config.url)) {
-            throw new Error('Url required');
-        }
-        this.headers = {};
-        if (config.headers) {
-            for (var header in config.headers) {
-                this.addHeader(header, config.headers[header]);
-            }
-        }
-        this.url = config.url;
-        this.method = isString(config.method) && /^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)$/i.test(config.method) ? config.method : 'GET';
-        this.async = isBoolean(config.async) ? config.async : true;
-        this.data = isDefined(config.data) ? config.data : null;
-        if (config.responseType) {
-            this.responseType = config.responseType;
-        }
-    }
-    HttpRequest.prototype.addHeader = function (header, value) {
-        this.headers[header] = value;
-        return this;
-    };
-    HttpRequest.prototype.setResponseType = function (responseType) {
-        this.responseType = responseType;
-        return this;
-    };
-    return HttpRequest;
-}());
-
 var HttpResponse = (function () {
     function HttpResponse() {
     }
     Object.defineProperty(HttpResponse.prototype, "isSuccessStatusCode", {
+        /*
+        RESPONSE
+        - headers
+        - body
+        - status https://fr.wikipedia.org/wiki/Liste_des_codes_HTTP
+        - is success status code:
+            - GET => 200
+            - POST => 201
+            - PUT => 200
+            - DELETE => 200 | 204
+            - HEAD => 200
+            - PATCH => 200
+            - OPTIONS => 204
+        */
         get: function () {
-            return /^(200|201|202|203|204|205|206|304)$/.test(this.status.toString());
+            return this.status >= 200 && this.status <= 299;
         },
         enumerable: true,
         configurable: true
@@ -1229,6 +1216,9 @@ var HttpResponse = (function () {
     return HttpResponse;
 }());
 
+function isValidMethod(value) {
+    return /^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)$/i.test(value);
+}
 function createXhr() {
     return new XMLHttpRequest();
 }
@@ -1236,7 +1226,7 @@ function createRequest(method, url, jsonContent, access_token) {
     var request = new HttpRequest({ method: method, url: url });
     if (jsonContent) {
         request.addHeader('content-type', 'application/json');
-        request.data = jsonContent;
+        request.body = jsonContent;
     }
     if (access_token) {
         request.addHeader('Authorization', 'Bearer ' + access_token);
@@ -1267,41 +1257,133 @@ function createResponse(xhr, request) {
     var response = new HttpResponse();
     response.status = xhr.status;
     response.headers = extractResponseHeaders(xhr.getAllResponseHeaders());
-    response.content = request.responseType ? xhr.response : xhr.responseText;
+    response.body = request.responseType ? xhr.response : xhr.responseText;
     return response;
 }
 function sendRequest(request, next) {
     var xhr = createXhr();
     if (xhr) {
-        xhr.open(request.method, request.url, request.async);
+        var method = request.method.toUpperCase(), handler = function () {
+            next(createResponse(xhr, request));
+        };
+        // abort
+        request.abort = function () {
+            xhr.abort();
+        };
+        // progress
+        if (request.progress) {
+            if (method === 'GET') {
+                xhr.addEventListener('progress', request.progress);
+            }
+            else if (method === 'POST' || method === 'PUT') {
+                xhr.upload.addEventListener('progress', request.progress);
+            }
+        }
+        // open
+        xhr.open(method, request.url, request.async);
         // headers
         if (request.headers) {
             for (var header in request.headers) {
-                xhr.setRequestHeader(header, request.headers[header]);
+                if (request.headers.hasOwnProperty(header)) {
+                    xhr.setRequestHeader(header, request.headers[header]);
+                }
             }
         }
         // response type
         if (request.responseType) {
             xhr.responseType = request.responseType;
         }
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                next(createResponse(xhr, request));
-            }
-        };
+        // timeout (milliseconds)
+        if (request.timeout) {
+            xhr.timeout = request.timeout;
+        }
+        // credentials
+        if (request.credentials === true) {
+            xhr.withCredentials = true;
+        }
+        // error | abort | timeout => status code 0
+        xhr.onload = handler;
+        xhr.onabort = handler;
+        xhr.onerror = handler;
+        xhr.ontimeout = handler;
         // send
-        xhr.send(request.data);
+        xhr.send(request.body);
     }
     else {
         throw new Error('XMLHttpRequest not supported');
     }
 }
 
+var HttpRequest = (function () {
+    function HttpRequest(config) {
+        /*
+        REQUEST
+        - method (GET | POST | PUT | DELETE | HEAD | OPTIONS | PATCH)
+        - url (scheme: HOST [ ":" PORT ] [ ABS_PATH [ "?" QUERY ]], http | https)
+        - headers => key | value (example 'content-type' 'application/json')
+        - body (JSON, Text, XML, HTML => changed content-type)
+        */
+        // method
+        if (config.method) {
+            if (!isValidMethod(config.method)) {
+                throw new Error('Invalid http method (GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)');
+            }
+            this.method = config.method;
+        }
+        else {
+            this.method = 'GET';
+        }
+        // url
+        if (!isString(config.url)) {
+            throw new Error('Url required');
+        }
+        this.url = config.url;
+        // headers
+        this.headers = {};
+        if (config.headers) {
+            for (var header in config.headers) {
+                if (config.headers.hasOwnProperty(header)) {
+                    this.addHeader(header, config.headers[header]);
+                }
+            }
+        }
+        // async
+        this.async = isBoolean(config.async) ? config.async : true;
+        // body
+        this.body = config.body;
+        // response type
+        if (config.responseType) {
+            this.responseType = config.responseType;
+        }
+        // progress
+        if (isFunction(config.progress)) {
+            this.progress = config.progress;
+        }
+        // timeout
+        if (isNumber(config.timeout)) {
+            this.timeout = config.timeout;
+        }
+        // credentials
+        if (isBoolean(config.credentials)) {
+            this.credentials = config.credentials;
+        }
+    }
+    HttpRequest.prototype.addHeader = function (header, value) {
+        this.headers[header] = value;
+        return this;
+    };
+    HttpRequest.prototype.setResponseType = function (responseType) {
+        this.responseType = responseType;
+        return this;
+    };
+    return HttpRequest;
+}());
+
 var Http = (function () {
     function Http() {
         this.interceptors = [];
     }
-    Http.prototype.intercept = function (type, r, onComplete, onAbort) {
+    Http.prototype._intercept = function (type, r, onComplete, onAbort) {
         var hooks = getHooks(type, this.interceptors), length = hooks.length, index = 0;
         function next(hook) {
             hook(r, function (canContinue) {
@@ -1333,7 +1415,7 @@ var Http = (function () {
         var request = new HttpRequest({ url: url });
         sendRequest(request, function (response) {
             if (response.status === 200) {
-                onSuccess(response.content);
+                onSuccess(response.body);
             }
             else {
                 if (onError) {
@@ -1345,10 +1427,10 @@ var Http = (function () {
     Http.prototype.send = function (request) {
         var _this = this;
         return new Promise(function (resolve, reject) {
-            _this.intercept('before', request, function () {
+            _this._intercept('before', request, function () {
                 try {
                     sendRequest(request, function (response) {
-                        _this.intercept('after', response, function () {
+                        _this._intercept('after', response, function () {
                             if (response.isSuccessStatusCode) {
                                 resolve(response);
                             }
@@ -1478,7 +1560,7 @@ var OAuth = (function () {
         var url = isUndefined(this.fields) ? this.profileUrl : this.profileUrl + '?fields=' + this.fields;
         return new Promise(function (resolve, reject) {
             _this._http.get(url, access_token).then(function (response) {
-                resolve(response.content);
+                resolve(response.body);
             }).catch(function (response) {
                 reject(response);
             });

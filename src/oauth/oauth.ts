@@ -37,7 +37,7 @@ export class OAuth {
         let url = isUndefined(this.fields) ? this.profileUrl : this.profileUrl + '?fields=' + this.fields;
         return new Promise((resolve, reject) => {
             this._http.get(url, access_token).then((response: HttpResponse) => {
-                resolve(response.content);
+                resolve(response.body);
             }).catch((response) => {
                 reject(response);
             });

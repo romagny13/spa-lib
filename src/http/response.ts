@@ -1,8 +1,24 @@
+import { HttpRequest } from './request';
+
 export class HttpResponse {
     headers: any;
-    content: any;
+    body: any;
     status: number;
+    /*
+    RESPONSE
+    - headers
+    - body
+    - status https://fr.wikipedia.org/wiki/Liste_des_codes_HTTP
+    - is success status code:
+        - GET => 200
+        - POST => 201
+        - PUT => 200
+        - DELETE => 200 | 204
+        - HEAD => 200
+        - PATCH => 200
+        - OPTIONS => 204
+    */
     get isSuccessStatusCode(): boolean {
-        return /^(200|201|202|203|204|205|206|304)$/.test(this.status.toString());
+        return this.status >= 200 && this.status <= 299;
     }
 }
