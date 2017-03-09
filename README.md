@@ -105,6 +105,7 @@ const formConfig = new FormConfig()
 // form binding
 const formBinding = new FormBinding('#myform', user, formConfig);
 ```
+Note: validation messages are append to html element on error with css class 'has-error' or 'has-success' (could be desabled with form config).
 
 on validation state changed
 ```js
