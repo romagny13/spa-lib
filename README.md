@@ -143,7 +143,6 @@ Allow to bind and validate with a simple form (cons: actually interact with the 
 <form id="myform" class="form-horizontal">
     <div class="form-group">
         <label class="control-label" for="firstname">Firstname:</label>
-        <span name="firstname" data-binding="firstname"></span>
         <input class="form-control" type="text" id="firstname" name="firstname" />
     </div>
 
