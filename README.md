@@ -25,7 +25,7 @@ import { TSPromise  } from 'spa-lib';
 
 ## Observables
 
-=> Observe value changes
+- Observe value changes
 ```js
 const vm = {
     title: 'My title'
@@ -40,7 +40,7 @@ observable.subscribe((value) => {
 vm.title = 'My new title'; // => valuechanged
 ```
 
-=> Observe array changes
+- Observe array changes
 ```js
 let items = ['a', 'b'];
 let o = new ObservableArray(items);
@@ -64,7 +64,7 @@ o.subscribe((event, value, index) => {
 items.push('c', 'd', 'e');
 ```
 
-support :
+Support :
 - push
 - unshift
 - splice
@@ -97,7 +97,7 @@ messenger.publish('MyEvent', 'my string', 10, { name: 'my object result' });
 
 ## Http
 
-Send a request (GET, POST, PUT, DELETE, HEAD, OPTIONS, PATCH)
+### Send a request (GET, POST, PUT, DELETE, HEAD, OPTIONS, PATCH)
 ```js
 const baseUrl = 'http://jsonplaceholder.typicode.com';
 const http = new Http();
@@ -106,7 +106,7 @@ http.send(request).then((response: HttpResponse) => {
     let posts = JSON.parse(response.body);
 });
 ```
-Post form
+- Post form
 ```js
 let body = 'title=' + encodeURIComponent('My post') + '&content=' + encodeURIComponent('My content');
 const request = new HttpRequest({
@@ -120,7 +120,7 @@ http.send(request).then((response: HttpResponse) => {
 });
 ```
 
-FormData
+- FormData
 ```js
 let data = new FormData();
 data.append('id', '101');
@@ -137,7 +137,7 @@ http.send(request).then((response: HttpResponse) => {
 });
 ```
 
-Set a timeout (milliseconds)
+- Set a timeout (milliseconds)
 ```js
 const request = new HttpRequest({
     url: `${baseUrl}/posts`,
@@ -152,13 +152,13 @@ http.send(request).then(() => {
 });
 ```
 
-Abort a request
+- Abort a request
 ```js
 const request = new HttpRequest({ url: `${baseUrl}/posts`});
 http.send(request).then(() => { }, (response) => {});
 request.abort();
 ```
-Handle progress
+- Handle progress
 ```js
 
 const request = new HttpRequest({
@@ -169,7 +169,7 @@ const request = new HttpRequest({
 });
 http.send(request).then(() => {});
 ```
-Response type => blob
+- Response type => blob
 ```js
 const request = new HttpRequest({ url: 'http://res.cloudinary.com/romagny13/image/upload/v1464052663/dotnet_oh0ryu.png', responseType: 'blob' });
 http.send(request).then((response: HttpResponse) => {
@@ -177,7 +177,7 @@ http.send(request).then((response: HttpResponse) => {
 });
 ```
 
-REST Shorthands (get,post,put,delete)
+### REST Shorthands (get,post,put,delete)
 ```js
 const data = {
     title: 'My post',
@@ -187,7 +187,7 @@ http.post(`${baseUrl}/posts`, JSON.stringify(data)).then((response: HttpResponse
 
 });
 ```
-put 
+- put 
 ```js
 const data = {
     id: 1,
@@ -198,20 +198,20 @@ http.put(`${baseUrl}/posts/1`, JSON.stringify(data)).then((response: HttpRespons
     let post = JSON.parse(response.body);
 });
 ```
-delete
+- delete
 ```js
 http.delete(`${baseUrl}/posts/1`).then((response: HttpResponse) => {
 
 });
 ```
 
-With an access_token
+- With an access_token
 ```js
 let access_token = 'ya29.CjCmA3KKBZH7ElidD3j_peoQaPdy2G099Ek6DYuYRfwFqSMXpR3i2_2xSjjHBo6FNNo';
 http.get(`${baseUrl}/posts`, access_token).then((response: HttpResponse) => {});
 ```
 
-Load
+### Load
 ```js
 http.load('http://localhost/blog/mytemplate.html', (template) => {
 
@@ -252,7 +252,7 @@ cache.clear();
 
 ## Storage
 
-Cookies
+### Cookies
 ```js
 const cookieService = new CookieService();
 let name = 'mycookie';
@@ -268,7 +268,7 @@ let result = cookieService.delete(name);
 cookieService.clear();
 ```
 
-Local and session storage
+### Local and session storage
 
 ```js
 let localService = new StorageService();
@@ -302,7 +302,7 @@ sessionService.remove(key);
 sessionService.clear();
 ```
 
-indexedDB
+### indexedDB
 
 <a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB">MDN</a>
 
@@ -327,21 +327,21 @@ indexeddbService.openCreateDb('testdb', 1).then((result) => {
 
 });
 ```
-Insert
+- Insert
 ```js
 indexeddbService.insert('users', { userName: 'marie' }).then((result) => {
 
 });
 ```
 
-get all
+- get all
 
 ```js
 indexeddbService.getAll('users').then((result: any[]) => {
 
 });
 ```
-get one
+- get one
 
 ```js
 // object store and key
@@ -350,7 +350,7 @@ indexeddbService.getOne('users', 1).then((result) => {
 };
 ```
 
-update
+- update
 ```js
 let user = {
     userName: 'updated'
@@ -360,13 +360,12 @@ indexeddbService.update('users', 1, user).then((result) => {
 });
 ```
 
-delete
+- delete
 ```js
 indexeddbService.delete('users', 1).then((result) => {
 
 });
 ```
-
 
 
 
