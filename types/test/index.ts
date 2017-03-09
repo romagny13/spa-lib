@@ -7,5 +7,3 @@ const o = new SpaLib.ObservableArray([]);
 const p = new SpaLib.TSPromise();
 
 p.resolve();
-
-

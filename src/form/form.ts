@@ -68,7 +68,7 @@ export class FormBinding {
                         // source value with no validations => create default config
                         if (!formElementConfig) {
                             formElementConfig = new FormElementConfig(bindedName);
-                            formConfig.addFormElementConfig(formElementConfig);
+                            formConfig.formElementConfigs[bindedName] = formElementConfig;
                         }
                         if (type === 'string' || type === 'number' || type === 'boolean') {
                             let binding = new FormElementWithSource(this, element, bindedName, formElementConfig, formConfig, source, sourceValue, type);

@@ -1,4 +1,4 @@
-import { isUndefined, isFunction } from '../util';
+import { isFunction, isString, isUndefined } from '../util';
 import { HttpRequest } from './request';
 import { HttpResponse } from './response';
 import { sendRequest, createRequest, getHooks, HttpInterceptor } from './util';
@@ -33,15 +33,13 @@ export class Http {
     }
 
     load(url: string, onSuccess: Function, onError?: Function) {
-        if (isUndefined(url)) { throw new Error('Url required'); }
+        if (!isString(url)) { throw new Error('Url required'); }
         const request = new HttpRequest({ url });
         sendRequest(request, (response: HttpResponse) => {
             if (response.status === 200) {
                 onSuccess(response.body);
             }
-            else {
-                if (onError) { onError(response); }
-            }
+            else if (onError) { onError(response); }
         });
     }
 

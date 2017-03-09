@@ -51,34 +51,45 @@ interface SimpleFormElement extends FormElementBinding {
 }
 
 interface Validator {
-    error: string;
-    message: string;
+    required(message?: string): RequiredValidator;
+    minLength(minLength?: number, message?: string): MinLengthValidator;
+    maxLength(maxLength?: number, message?: string): MaxLengthValidator;
+    pattern(pattern: any, message?: string): PatternValidator;
+    custom(fn: Function, message?: string): CustomValidator;
 }
 
-interface RequiredValidator extends Validator {
+interface RequiredValidator {
     new (message?: string): RequiredValidator;
     validate(value: any): boolean;
 }
 
-interface MinLengthValidator extends Validator {
+interface MinLengthValidator {
+    error: string;
+    message: string;
     minLength: number;
     new (minLength?: number, message?: string): MinLengthValidator;
     validate(value: any): boolean;
 }
 
-interface MaxLengthValidator extends Validator {
+interface MaxLengthValidator {
+    error: string;
+    message: string;
     maxLength: number;
     new (maxLength?: number, message?: string): MaxLengthValidator;
     validate(value: any): boolean;
 }
 
-interface PatternValidator extends Validator {
+interface PatternValidator {
+    error: string;
+    message: string;
     pattern: any;
     new (pattern: any, message?: string): PatternValidator;
     validate(value: any): boolean;
 }
 
-interface CustomValidator extends Validator {
+interface CustomValidator {
+    error: string;
+    message: string;
     fn: Function;
     new (fn: Function, message?: string): CustomValidator;
     validate(value: any): boolean;
@@ -290,7 +301,7 @@ interface StorageService {
 
 interface CookieService {
     new (): CookieService;
-    set(name: string, value: string, expiration?: number): void;
+    set(name: string, value: string, expirationDays?: number): void;
     get(name: string): string;
     has(name: string): boolean;
     delete(name: string): boolean;

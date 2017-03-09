@@ -2,11 +2,11 @@ import { isString, isNumber } from '../util';
 import { getExpirationDateString } from './util';
 
 export class CookieService {
-    set(name: string, value: string, expiration?: number) {
+    set(name: string, value: string, expirationDays?: number) {
         if (!isString(name)) throw new Error('Name required');
         if (!isString(value)) throw new Error('String value required');
-        if (!isNumber(expiration)) { expiration = 30; }
-        document.cookie = name + '=' + value + ';expires=' + getExpirationDateString(expiration);
+        if (!isNumber(expirationDays)) { expirationDays = 30; }
+        document.cookie = name + '=' + value + ';expires=' + getExpirationDateString(expirationDays);
     }
     get(name: string) {
         if (!isString(name)) throw new Error('Name required');
@@ -19,11 +19,11 @@ export class CookieService {
             }
         }
     }
-    has(name: string) {
+    has(name: string): boolean {
         if (!isString(name)) throw new Error('Name required');
         return this.get(name) !== undefined;
     }
-    delete(name: string) {
+    delete(name: string): boolean {
         if (this.has(name)) {
             this.set(name, '', -1);
             return true;

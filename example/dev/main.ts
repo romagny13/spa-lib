@@ -1,51 +1,18 @@
+import { FormConfig } from '../../src/form/form.config';
 import {
-    FormBinding,
-    FormSubmittedResponse,
-    FormElementError,
-    FormConfig,
-    FormElementConfig,
-    RequiredValidator,
+    CustomValidator,
     MinLengthValidator,
-    MaxLengthValidator,
     PatternValidator,
-    CustomValidator
-} from '../../src/main';
+    RequiredValidator,
+    Validator
+} from '../../src/form/validators';
+import { FormElementConfig } from '../../src/form/form-element.config';
+import { isArray } from '../../src/util';
+import { FormBinding } from '../../src/form/form';
+import { FormSubmittedResponse } from '../../src/form/form.submitted.response';
+import { FormElementError } from '../../src/form/form.error';
 
-
-let firstNameConfig = new FormElementConfig('firstname');
-firstNameConfig
-    .addValidator(new RequiredValidator())
-    .addValidator(new MinLengthValidator(3));
-
-let lastNameConfig = new FormElementConfig('lastname');
-lastNameConfig
-    /*.addValidator(new RequiredValidator())*/
-    .addValidator(new MaxLengthValidator(5));
-
-let emailConfig = new FormElementConfig('email');
-emailConfig.addValidator(new PatternValidator(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/, 'Please enter a valid email.'));
-
-let ageConfig = new FormElementConfig('age');
-ageConfig.addValidator(new CustomValidator((value) => {
-    return value > 0 && value < 120;
-}, 'Oops ??'));
-
-let agreeConfig = new FormElementConfig('agree');
-agreeConfig.addValidator(new RequiredValidator());
-
-let likesConfig = new FormElementConfig('likes');
-likesConfig.addValidator(new CustomValidator(() => {
-    return user.likes.length > 0;
-}, 'Please select one or more items.'));
-
-const formConfig = new FormConfig()
-    .addFormElementConfig(firstNameConfig)
-    .addFormElementConfig(lastNameConfig)
-    .addFormElementConfig(emailConfig)
-    .addFormElementConfig(ageConfig)
-    .addFormElementConfig(agreeConfig)
-    .addFormElementConfig(likesConfig);
-
+// model
 let user = {
     firstname: 'marie',
     lastname: 'bellin',
@@ -56,6 +23,21 @@ let user = {
     likes: ['Milk', 'Cakes']
 };
 
+// form config
+// const formConfig = new FormConfig('valuechanged', false, false, false)
+const formConfig = new FormConfig()
+    .addFormElementConfig('firstname', [Validator.required(), Validator.minLength(3)])
+    .addFormElementConfig('lastname', [Validator.maxLength(10)])
+    .addFormElementConfig('email', [Validator.pattern(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/, 'Please enter a valid email.')])
+    .addFormElementConfig('age', [Validator.custom((value) => {
+        return value > 0 && value < 120;
+    }, 'Oops ??')])
+    .addFormElementConfig('agree', [Validator.required()])
+    .addFormElementConfig('likes', [Validator.custom(() => {
+        return user.likes.length > 0;
+    }, 'Please select one or more items.')]);
+
+// form binding
 const formBinding = new FormBinding('#myform', user, formConfig);
 const sumary: any = document.querySelector('.sumary');
 
@@ -86,4 +68,3 @@ formBinding.onSubmit((response: FormSubmittedResponse) => {
 // for debug
 window['user'] = user;
 console.log(formBinding);
-

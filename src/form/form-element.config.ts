@@ -6,7 +6,6 @@ export class FormElementConfig {
     name: string; // target form element name and source property name
     updateType: string; // valuechanged by default or lostfocus
     validators: any[];
-
     constructor(name: string, updateType?: string) {
         if (!isString(name)) { throw new Error('Name required (target form element name/source property name)'); }
         this.name = name;

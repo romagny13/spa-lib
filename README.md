@@ -43,8 +43,8 @@ vm.title = 'My new title'; // => valuechanged
 - Observe array changes
 ```js
 let items = ['a', 'b'];
-let o = new ObservableArray(items);
-o.subscribe((event, value, index) => {
+let observableArray = new ObservableArray(items);
+observableArray.subscribe((event, value, index) => {
     switch (event) {
         case 'added':
 
@@ -76,10 +76,64 @@ Support :
 
 ## Form binding and validation
 
-<a href="https://github.com/romagny13/spa-lib/tree/master/example/dev">Look at the form example</a>
+```js
+// model
+let user = {
+    firstname: 'marie',
+    lastname: 'bellin',
+    email: '',
+    age: 20,
+    list: '2',
+    preference: 'b', 
+    likes: ['Milk', 'Cakes'] // binding on array
+};
 
+// form config (validation on 'submit' by default or 'valuechanged')
+const formConfig = new FormConfig()
+    // form element name, validators array, updateType? ('valuechanged' by default or 'lostfocus')
+    .addFormElementConfig('firstname', [Validator.required(), Validator.minLength(3)])
+    .addFormElementConfig('lastname', [Validator.maxLength(10)])
+    .addFormElementConfig('email', [Validator.pattern(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/, 'Please enter a valid email.')])
+    .addFormElementConfig('age', [Validator.custom((value) => {
+        return value > 0 && value < 120;
+    }, 'Oops ??')])
+    .addFormElementConfig('agree', [Validator.required()]) // validation with a element not in the model (checkbox for example)
+    .addFormElementConfig('likes', [Validator.custom(() => {
+        return user.likes.length > 0;
+    }, 'Please select one or more items.')]);
+
+// form binding
+const formBinding = new FormBinding('#myform', user, formConfig);
 ```
-npm run dev
+
+on validation state changed
+```js
+formBinding.onStateChanged((element, errors) => {
+    console.log('State changed', element, errors);
+});
+```
+
+on submit (create a sumary for example)
+```js
+const sumary: any = document.querySelector('.sumary');
+formBinding.onSubmit((response: FormSubmittedResponse) => {
+    sumary.innerHTML = '';
+    sumary.style.display = 'block';
+    if (response.hasError) {
+        response.errors.forEach((error: FormElementError) => {
+            let p = document.createElement('p');
+            p.innerHTML = error.message;
+            sumary.appendChild(p);
+        });
+    }
+    else {
+        let json = JSON.stringify(response.source);
+        sumary.innerHTML = `
+            <h2>Ok (refresh on validation state changed)</h2>
+            <pre>${json}</pre>
+        `;
+    }
+});
 ```
 
 ## Messenger

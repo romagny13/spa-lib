@@ -3,6 +3,23 @@ import { isUndefined, isDefined, isString, isNumber, isBoolean } from '../util';
 export abstract class Validator {
     error: string;
     message: string;
+
+    static required(message?: string) {
+        return new RequiredValidator(message);
+    }
+    static minLength(minLength?: number, message?: string) {
+        return new MinLengthValidator(minLength, message);
+    }
+    static maxLength(maxLength?: number, message?: string) {
+        return new MaxLengthValidator(maxLength, message);
+    }
+    static pattern(pattern: any, message?: string) {
+        return new PatternValidator(pattern, message);
+    }
+    static custom(fn: Function, message?: string) {
+        return new CustomValidator(fn, message);
+    }
+
     abstract validate(value: any): boolean;
 }
 

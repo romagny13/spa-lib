@@ -1,5 +1,5 @@
 /*!
- * SpaLib v0.0.8
+ * SpaLib v0.1.0
  * (c) 2017 romagny13
  * Released under the MIT License.
  */
@@ -50,15 +50,15 @@ function getIndexedDB() {
 var CookieService = (function () {
     function CookieService() {
     }
-    CookieService.prototype.set = function (name, value, expiration) {
+    CookieService.prototype.set = function (name, value, expirationDays) {
         if (!isString(name))
             throw new Error('Name required');
         if (!isString(value))
             throw new Error('String value required');
-        if (!isNumber(expiration)) {
-            expiration = 30;
+        if (!isNumber(expirationDays)) {
+            expirationDays = 30;
         }
-        document.cookie = name + '=' + value + ';expires=' + getExpirationDateString(expiration);
+        document.cookie = name + '=' + value + ';expires=' + getExpirationDateString(expirationDays);
     };
     CookieService.prototype.get = function (name) {
         if (!isString(name))
@@ -782,7 +782,13 @@ var FormConfig = (function () {
         this.cssClassOnSuccess = isBoolean(cssClassOnSuccess) ? cssClassOnSuccess : true;
         this.cssClassOnError = isBoolean(cssClassOnError) ? cssClassOnError : true;
     }
-    FormConfig.prototype.addFormElementConfig = function (config) {
+    FormConfig.prototype.addFormElementConfig = function (name, validators, updateType) {
+        var config = new FormElementConfig(name, updateType);
+        if (isArray(validators)) {
+            validators.forEach(function (validator) {
+                config.addValidator(validator);
+            });
+        }
         this.formElementConfigs[config.name] = config;
         return this;
     };
@@ -1005,7 +1011,7 @@ var FormBinding = (function () {
                         // source value with no validations => create default config
                         if (!formElementConfig) {
                             formElementConfig = new FormElementConfig(bindedName);
-                            formConfig.addFormElementConfig(formElementConfig);
+                            formConfig.formElementConfigs[bindedName] = formElementConfig;
                         }
                         if (type === 'string' || type === 'number' || type === 'boolean') {
                             var binding = new FormElementWithSource(this, element, bindedName, formElementConfig, formConfig, source, sourceValue, type);
@@ -1082,6 +1088,21 @@ var FormBinding = (function () {
 var Validator = (function () {
     function Validator() {
     }
+    Validator.required = function (message) {
+        return new RequiredValidator(message);
+    };
+    Validator.minLength = function (minLength, message) {
+        return new MinLengthValidator(minLength, message);
+    };
+    Validator.maxLength = function (maxLength, message) {
+        return new MaxLengthValidator(maxLength, message);
+    };
+    Validator.pattern = function (pattern, message) {
+        return new PatternValidator(pattern, message);
+    };
+    Validator.custom = function (fn, message) {
+        return new CustomValidator(fn, message);
+    };
     return Validator;
 }());
 var RequiredValidator = (function (_super) {
@@ -1409,7 +1430,7 @@ var Http = (function () {
         }
     };
     Http.prototype.load = function (url, onSuccess, onError) {
-        if (isUndefined(url)) {
+        if (!isString(url)) {
             throw new Error('Url required');
         }
         var request = new HttpRequest({ url: url });
@@ -1417,10 +1438,8 @@ var Http = (function () {
             if (response.status === 200) {
                 onSuccess(response.body);
             }
-            else {
-                if (onError) {
-                    onError(response);
-                }
+            else if (onError) {
+                onError(response);
             }
         });
     };
