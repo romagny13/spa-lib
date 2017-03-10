@@ -329,6 +329,22 @@ let access_token = 'ya29.CjCmA3KKBZH7ElidD3j_peoQaPdy2G099Ek6DYuYRfwFqSMXpR3i2_2
 http.get(`${baseUrl}/posts`, access_token).then((response: HttpResponse) => {});
 ```
 
+### Interceptors
+
+Create an interceptor
+```js
+http.interceptors.push({
+    before(request: HttpRequest, next: Function) {
+
+        next(true); // cancel if false
+    },
+    after(response: HttpResponse, next: Function) {
+        
+        next(true);
+    }
+});
+```
+
 ### Load
 ```js
 http.load('http://localhost/blog/mytemplate.html', (template) => {
