@@ -352,6 +352,8 @@ interface SpaLibStatic {
     StorageService: StorageService;
     CookieService: CookieService;
     TSPromise: TSPromise;
+    observe(handler: Function): Observable;
+    observeArray(handler: Function): ObservableArray;
 }
 
 declare var SpaLib: SpaLibStatic;
