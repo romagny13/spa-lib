@@ -194,7 +194,7 @@ Allow to bind and validate with a simple form (cons: actually interact with the 
 ```js
 let messenger = new Messenger();
 // subscribe (one or more arguments)
-messenger.subscribe('MyEvent', (result1, result2) => {
+messenger.subscribe('MyEvent', (result1, result2, result3) => {
 
 });
 
@@ -213,6 +213,17 @@ http.send(request).then((response: HttpResponse) => {
     let posts = JSON.parse(response.body);
 });
 ```
+- Post JSON 
+```js
+const data = {
+    title: 'My post',
+    body: 'My content'
+};
+http.post(`${baseUrl}/posts`, JSON.stringify(data)).then((response: HttpResponse) => {
+    let post = JSON.parse(response.body);
+});
+```
+
 - Post form
 ```js
 let body = 'title=' + encodeURIComponent('My post') + '&content=' + encodeURIComponent('My content');
