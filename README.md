@@ -16,7 +16,7 @@ npm i spa-lib -S
 - TypeScript Promise polyfill
 
 
-## Imports
+## es6 / TypeScript
 
 Example
 ```js
