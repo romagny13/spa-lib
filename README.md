@@ -20,7 +20,20 @@ npm i spa-lib -S
 
 Example
 ```js
-import { TSPromise  } from 'spa-lib';
+import { Observable, TSPromise  } from 'spa-lib';
+// or
+import * as SpaLib from 'spa-lib';
+```
+
+## es5
+
+```html
+ <script src="node_modules/spa-lib/dist/spa.lib.js"></script>
+```
+
+Example
+```js
+var messenger = new SpaLib.Messenger();
 ```
 
 ## Observables
@@ -73,6 +86,26 @@ Support :
 - sort
 - filter
 - resetFilter
+
+### Shorthands
+
+```js
+const vm = {
+    title: 'My title'
+};
+
+observe(vm, 'title', (value) => {
+
+});
+```
+
+```js
+let items = ['a', 'b'];
+
+observeArray(items, (event, value, index) => {
+
+});
+```
 
 ## Form binding and validation
 

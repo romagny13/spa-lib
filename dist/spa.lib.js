@@ -1,5 +1,5 @@
 /*!
- * SpaLib v0.1.0
+ * SpaLib v0.1.1
  * (c) 2017 romagny13
  * Released under the MIT License.
  */

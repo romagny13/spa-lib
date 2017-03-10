@@ -68,3 +68,4 @@ formBinding.onSubmit((response: FormSubmittedResponse) => {
 // for debug
 window['user'] = user;
 console.log(formBinding);
+

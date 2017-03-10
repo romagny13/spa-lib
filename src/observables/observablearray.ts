@@ -116,3 +116,9 @@ export class ObservableArray {
         return false;
     }
 }
+
+export function observeArray(array, handler) {
+    let observableArray = new ObservableArray(array);
+    observableArray.subscribe(handler);
+    return observableArray;
+}

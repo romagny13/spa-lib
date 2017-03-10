@@ -38,3 +38,9 @@ export class Observable {
         return false;
     }
 }
+
+export function observe(obj, name, handler) {
+    let observable = new Observable(obj, name);
+    observable.subscribe(handler);
+    return observable;
+}
