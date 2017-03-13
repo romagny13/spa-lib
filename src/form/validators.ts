@@ -1,5 +1,14 @@
 import { isUndefined, isDefined, isString, isNumber, isBoolean } from '../util';
 
+
+export function isRequired(value) {
+    return value === null || isUndefined(value) || value === '' || (isBoolean(value) && value === false);
+}
+
+export function formatMessage(message: string, searchValue, replaceValue) {
+    return message.replace(searchValue, replaceValue);
+}
+
 export abstract class Validator {
     error: string;
     message: string;
@@ -30,7 +39,7 @@ export class RequiredValidator extends Validator {
     }
 
     validate(value) {
-        if (value === null || isUndefined(value) || value === '' || (isBoolean(value) && value === false)) {
+        if (isRequired(value)) {
             this.error = this.message;
             return false;
         }
@@ -39,10 +48,6 @@ export class RequiredValidator extends Validator {
             return true;
         }
     }
-}
-
-export function formatMessage(message: string, searchValue, replaceValue) {
-    return message.replace(searchValue, replaceValue);
 }
 
 export class MinLengthValidator extends Validator {
@@ -54,7 +59,7 @@ export class MinLengthValidator extends Validator {
     }
 
     validate(value) {
-        if (value && value.length < this.minLength) {
+        if (!isRequired(value) && value.length < this.minLength) {
             // error
             this.error = this.message;
             return false;
@@ -75,7 +80,7 @@ export class MaxLengthValidator extends Validator {
     }
 
     validate(value) {
-        if (value && value.length > this.maxLength) {
+        if (!isRequired(value) && value.length > this.maxLength) {
             // error
             this.error = this.message;
             return false;
@@ -95,7 +100,7 @@ export class PatternValidator extends Validator {
         this.message = isString(message) ? message : 'Please fix this field.';
     }
     validate(value) {
-        if (isDefined(value) && !this.pattern.test(value)) {
+        if (!isRequired(value) && !this.pattern.test(value)) {
             this.error = this.message;
             return false;
         }
@@ -114,7 +119,7 @@ export class CustomValidator extends Validator {
         this.message = isString(message) ? message : 'Please fix this field.';
     }
     validate(value) {
-        if (!this.fn(value)) {
+        if (!isRequired(value) && !this.fn(value)) {
             this.error = this.message;
             return false;
         }

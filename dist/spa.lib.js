@@ -1,5 +1,5 @@
 /*!
- * SpaLib v0.1.1
+ * SpaLib v0.1.2
  * (c) 2017 romagny13
  * Released under the MIT License.
  */
@@ -1085,6 +1085,12 @@ var FormBinding = (function () {
     return FormBinding;
 }());
 
+function isRequired(value) {
+    return value === null || isUndefined(value) || value === '' || (isBoolean(value) && value === false);
+}
+function formatMessage(message, searchValue, replaceValue) {
+    return message.replace(searchValue, replaceValue);
+}
 var Validator = (function () {
     function Validator() {
     }
@@ -1113,7 +1119,7 @@ var RequiredValidator = (function (_super) {
         return _this;
     }
     RequiredValidator.prototype.validate = function (value) {
-        if (value === null || isUndefined(value) || value === '' || (isBoolean(value) && value === false)) {
+        if (isRequired(value)) {
             this.error = this.message;
             return false;
         }
@@ -1124,9 +1130,6 @@ var RequiredValidator = (function (_super) {
     };
     return RequiredValidator;
 }(Validator));
-function formatMessage(message, searchValue, replaceValue) {
-    return message.replace(searchValue, replaceValue);
-}
 var MinLengthValidator = (function (_super) {
     __extends(MinLengthValidator, _super);
     function MinLengthValidator(minLength, message) {
@@ -1136,7 +1139,7 @@ var MinLengthValidator = (function (_super) {
         return _this;
     }
     MinLengthValidator.prototype.validate = function (value) {
-        if (value && value.length < this.minLength) {
+        if (!isRequired(value) && value.length < this.minLength) {
             // error
             this.error = this.message;
             return false;
@@ -1157,7 +1160,7 @@ var MaxLengthValidator = (function (_super) {
         return _this;
     }
     MaxLengthValidator.prototype.validate = function (value) {
-        if (value && value.length > this.maxLength) {
+        if (!isRequired(value) && value.length > this.maxLength) {
             // error
             this.error = this.message;
             return false;
@@ -1178,7 +1181,7 @@ var PatternValidator = (function (_super) {
         return _this;
     }
     PatternValidator.prototype.validate = function (value) {
-        if (isDefined(value) && !this.pattern.test(value)) {
+        if (!isRequired(value) && !this.pattern.test(value)) {
             this.error = this.message;
             return false;
         }
@@ -1198,7 +1201,7 @@ var CustomValidator = (function (_super) {
         return _this;
     }
     CustomValidator.prototype.validate = function (value) {
-        if (!this.fn(value)) {
+        if (!isRequired(value) && !this.fn(value)) {
             this.error = this.message;
             return false;
         }

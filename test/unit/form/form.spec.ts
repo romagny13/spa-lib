@@ -13,6 +13,7 @@ import {
 describe('Form', () => {
 
     describe('Validators', () => {
+
         it('required ko', () => {
             let validator = new RequiredValidator('Message');
             let result = validator.validate(undefined);
@@ -86,6 +87,33 @@ describe('Form', () => {
             assert.isTrue(result);
             assert.equal(validator.error, undefined);
         });
+
+        it('Should ignore minLength if no value', () => {
+            let validator = new MinLengthValidator(3, 'Message');
+            let result = validator.validate('');
+            assert.isTrue(result);
+        });
+
+        it('Should ignore maxLength if no value', () => {
+            let validator = new MaxLengthValidator(3, 'Message');
+            let result = validator.validate('');
+            assert.isTrue(result);
+        });
+
+        it('Should ignore pattern if no value', () => {
+            let validator = new PatternValidator(/^[a-z]+$/, 'Message');
+            let result = validator.validate('');
+            assert.isTrue(result);
+        });
+
+        it('Should ignore custom if no value', () => {
+            let validator = new CustomValidator((p) => {
+                return p === 'a'; // ok if p === 'a'
+            }, 'Message');
+            let result = validator.validate('');
+            assert.isTrue(result);
+        });
+
     });
 
     describe('FormElements', () => {
@@ -122,12 +150,6 @@ describe('Form', () => {
             let result = validateValue('ab', validators);
             assert.equal(result.length, 1);
             assert.equal(result[0], 'Error message');
-        });
-
-        it('Should pass without required if string empty', () => {
-            let validators = [new MaxLengthValidator(30, 'Error message'), new MaxLengthValidator(10)];
-            let result = validateValue('', validators);
-            assert.equal(result.length, 0);
         });
 
         it('Should pass validation', () => {
