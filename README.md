@@ -423,7 +423,7 @@ cache.clear();
 ```js
 const cookieService = new CookieService();
 let name = 'mycookie';
-// create a cookie
+// create a cookie (arguments: name, value, expirationDays, path, domain, secure)
 cookieService.set(name, value, 10);
 // check
 let hasCookie = cookieService.has(name)

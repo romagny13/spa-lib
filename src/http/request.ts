@@ -1,5 +1,5 @@
 import { isDefined, isString, isBoolean, isFunction, isNumber } from '../util';
-import { isValidMethod } from './util';
+import { isValidMethod, normalizeMethod } from './util';
 
 export class HttpRequest {
     headers: any;
@@ -24,7 +24,7 @@ export class HttpRequest {
         // method
         if (config.method) {
             if (!isValidMethod(config.method)) { throw new Error('Invalid http method (GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)'); }
-            this.method = config.method;
+            this.method = normalizeMethod(config.method);
         }
         else {
             this.method = 'GET';

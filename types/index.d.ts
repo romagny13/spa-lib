@@ -301,7 +301,7 @@ interface StorageService {
 
 interface CookieService {
     new (): CookieService;
-    set(name: string, value: string, expirationDays?: number): void;
+    set(name: string, value: string, expirationDays?: number, path?: string, domain?: string, secure?: boolean): void;
     get(name: string): string;
     has(name: string): boolean;
     delete(name: string): boolean;

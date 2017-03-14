@@ -1,9 +1,13 @@
-import { isString, isFunction } from '../util';
+import { isString, isFunction, isDefined } from '../util';
 import { HttpRequest } from './request';
 import { HttpResponse } from './response';
 
 export function isValidMethod(value: string) {
     return /^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)$/i.test(value);
+}
+
+export function normalizeMethod(value: string) {
+    return value.toUpperCase();
 }
 
 export interface HttpInterceptor {
@@ -29,13 +33,15 @@ export function createRequest(method: string, url: string, jsonContent?: string,
 
 export function extractResponseHeaders(headersString: string): any {
     let result = {};
-    let headerSplits = headersString.trim().split('\r\n');
-    headerSplits.forEach((headerString) => {
-        let keyValue = headerString.split(': ');
-        if (keyValue[1]) {
-            result[keyValue[0]] = keyValue[1];
-        }
-    });
+    if (isString(headersString)) {
+        let headerSplits = headersString.trim().split(/\r?\n/);
+        headerSplits.forEach((headerString) => {
+            let keyValue = headerString.split(': ');
+            if (keyValue[1]) {
+                result[keyValue[0]] = keyValue[1];
+            }
+        });
+    }
     return result;
 }
 
@@ -52,15 +58,17 @@ export function getHooks(type: string, interceptors: HttpInterceptor[]) {
 export function createResponse(xhr: XMLHttpRequest, request: HttpRequest): HttpResponse {
     const response = new HttpResponse();
     response.status = xhr.status;
+    response.statusText = xhr.statusText;
     response.headers = extractResponseHeaders(xhr.getAllResponseHeaders());
-    response.body = request.responseType ? xhr.response : xhr.responseText;
+    response.url = xhr.responseURL || response.getHeader('X-Request-URL');
+    response.body = xhr.response || xhr.responseText;
     return response;
 }
 
 export function sendRequest(request: HttpRequest, next: Function) {
     const xhr = createXhr();
     if (xhr) {
-        let method = request.method.toUpperCase(),
+        let method = request.method,
             handler = () => {
                 next(createResponse(xhr, request));
             };
@@ -112,7 +120,8 @@ export function sendRequest(request: HttpRequest, next: Function) {
         xhr.onerror = handler;
         xhr.ontimeout = handler;
         // send
-        xhr.send(request.body);
+        let data = isDefined(request.body) ? request.body : null;
+        xhr.send(data);
     }
     else { throw new Error('XMLHttpRequest not supported'); }
 }

@@ -1,5 +1,5 @@
 /*!
- * SpaLib v0.1.2
+ * SpaLib v0.1.3
  * (c) 2017 romagny13
  * Released under the MIT License.
  */
@@ -50,7 +50,7 @@ function getIndexedDB() {
 var CookieService = (function () {
     function CookieService() {
     }
-    CookieService.prototype.set = function (name, value, expirationDays) {
+    CookieService.prototype.set = function (name, value, expirationDays, path, domain, secure) {
         if (!isString(name))
             throw new Error('Name required');
         if (!isString(value))
@@ -58,7 +58,20 @@ var CookieService = (function () {
         if (!isNumber(expirationDays)) {
             expirationDays = 30;
         }
-        document.cookie = name + '=' + value + ';expires=' + getExpirationDateString(expirationDays);
+        var newCookie = [];
+        newCookie.push(name + '=' + encodeURIComponent(value));
+        newCookie.push('expires=' + getExpirationDateString(expirationDays));
+        if (isString(path)) {
+            newCookie.push('path=' + path);
+        }
+        if (isString(domain)) {
+            newCookie.push('domain=' + domain);
+        }
+        if (secure === true) {
+            newCookie.push('secure');
+        }
+        // set cookie
+        document.cookie = newCookie.join('; ');
     };
     CookieService.prototype.get = function (name) {
         if (!isString(name))
@@ -67,7 +80,7 @@ var CookieService = (function () {
         for (var i = 0; i < stored.length; i++) {
             var nameAndValue = stored[i].split('=');
             if (nameAndValue[0].trim() === name) {
-                return nameAndValue[1].trim();
+                return decodeURIComponent(nameAndValue[1].trim());
             }
         }
     };
@@ -1237,11 +1250,17 @@ var HttpResponse = (function () {
         enumerable: true,
         configurable: true
     });
+    HttpResponse.prototype.getHeader = function (header) {
+        return this.headers[header];
+    };
     return HttpResponse;
 }());
 
 function isValidMethod(value) {
     return /^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)$/i.test(value);
+}
+function normalizeMethod(value) {
+    return value.toUpperCase();
 }
 function createXhr() {
     return new XMLHttpRequest();
@@ -1259,13 +1278,15 @@ function createRequest(method, url, jsonContent, access_token) {
 }
 function extractResponseHeaders(headersString) {
     var result = {};
-    var headerSplits = headersString.trim().split('\r\n');
-    headerSplits.forEach(function (headerString) {
-        var keyValue = headerString.split(': ');
-        if (keyValue[1]) {
-            result[keyValue[0]] = keyValue[1];
-        }
-    });
+    if (isString(headersString)) {
+        var headerSplits = headersString.trim().split(/\r?\n/);
+        headerSplits.forEach(function (headerString) {
+            var keyValue = headerString.split(': ');
+            if (keyValue[1]) {
+                result[keyValue[0]] = keyValue[1];
+            }
+        });
+    }
     return result;
 }
 function getHooks(type, interceptors) {
@@ -1280,14 +1301,16 @@ function getHooks(type, interceptors) {
 function createResponse(xhr, request) {
     var response = new HttpResponse();
     response.status = xhr.status;
+    response.statusText = xhr.statusText;
     response.headers = extractResponseHeaders(xhr.getAllResponseHeaders());
-    response.body = request.responseType ? xhr.response : xhr.responseText;
+    response.url = xhr.responseURL || response.getHeader('X-Request-URL');
+    response.body = xhr.response || xhr.responseText;
     return response;
 }
 function sendRequest(request, next) {
     var xhr = createXhr();
     if (xhr) {
-        var method = request.method.toUpperCase(), handler = function () {
+        var method = request.method, handler = function () {
             next(createResponse(xhr, request));
         };
         // abort
@@ -1331,7 +1354,8 @@ function sendRequest(request, next) {
         xhr.onerror = handler;
         xhr.ontimeout = handler;
         // send
-        xhr.send(request.body);
+        var data = isDefined(request.body) ? request.body : null;
+        xhr.send(data);
     }
     else {
         throw new Error('XMLHttpRequest not supported');
@@ -1352,7 +1376,7 @@ var HttpRequest = (function () {
             if (!isValidMethod(config.method)) {
                 throw new Error('Invalid http method (GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)');
             }
-            this.method = config.method;
+            this.method = normalizeMethod(config.method);
         }
         else {
             this.method = 'GET';

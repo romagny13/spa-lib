@@ -4,6 +4,8 @@ export class HttpResponse {
     headers: any;
     body: any;
     status: number;
+    statusText: string;
+    url: string;
     /*
     RESPONSE
     - headers
@@ -20,5 +22,9 @@ export class HttpResponse {
     */
     get isSuccessStatusCode(): boolean {
         return this.status >= 200 && this.status <= 299;
+    }
+
+    getHeader(header) {
+        return this.headers[header];
     }
 }

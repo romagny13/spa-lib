@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Http</title>
+</head>
+
+<body>
+
+    <script src="../../dist/spa.lib.js"></script>
+    <script>
+        window.Promise = window.Promise || SpaLib.TSPromise;
+
+        var http = new SpaLib.Http();
+
+        http.get('http://www.omdbapi.com/?s=miami').then(function (response) {
+            console.log('get response', response);
+            console.log('body', JSON.parse(response.body));
+        });
+
+        http.delete('https://jsonplaceholder.typicode.com/posts/1').then(function (response) {
+            console.log('delete response', response);
+        });
+    </script>
+</body>
+
+</html>
